@@ -1,5 +1,6 @@
 # Dataset kaggle (first try, cnn creata con codice allegato a dataset)
 https://www.kaggle.com/datasets/grassknoted/asl-alphabet
+(87,000 immagini 200x200)
 
 Nella cartella kaggle trovi diversi file:
     - cartella input: all'interno ci sono i dataset in formato csv, sia per test che per training.
@@ -8,9 +9,12 @@ Nella cartella kaggle trovi diversi file:
     - webcam_test.py è un file in cui faccio un primo tentativo di usare la cnn da webcam del computer, se lo apri e esegui dovrebbe partire senza problemi. L'immagine diventa a colori quando riconosce un qualcosa... non mi succede spesso.
 
 Problematiche: 
-Facendo qualche test con la webcam il risultato non migliorava di molto, avevo un buon feedback molto raramente. Ho ipotizzato che uno dei motivi potesse essere che la rete è allenata su immagini 28x28 pixel, quindi piccolissime. Probabilmente quindi le mani  devono essere molto in chiaro su sfondo bianco... poco adatto. In più sarebbe necessario un ulteriore layer che "zoommi" sulla mano per una cnn così specifica e poco sensibile.
+Facendo qualche test con la webcam il risultato non migliorava di molto, avevo un buon feedback molto raramente. Ho ipotizzato che uno dei motivi potesse essere che la rete è allenata su immagini 28x28 pixel, quindi piccolissime. Probabilmente quindi le mani  devono essere molto in chiaro su sfondo bianco... poco adatto. In più sarebbe necessario un ulteriore layer che "zoommi" sulla mano (object detenction) per una cnn così specifica e poco sensibile.
+NB! Sono scelte fatte a livello di codice nel creare la rete, non proprie del dataset. Intanto lo cambio solo per cercare di capire come funziona da esempi spiegati.  
+
 
 ## Dataset roboflox
 https://public.roboflow.com/object-detection/american-sign-language-letters
+(1,700 immagini ) 
 Il video è molto più promettente.
 
