@@ -43,7 +43,7 @@ while True:
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 
         #Writing down prediction value in output file. Should be a number between 0 and 1
-        f.write('{}\n'.format(prediction))
+        f.write('{}\n'.format(prediction_int))
         cv2.imshow("Capturing", frame)
         key=cv2.waitKey(1)
         if key == ord('q'):
