@@ -1,6 +1,5 @@
 # Dataset kaggle (first try, cnn creata con codice allegato a dataset)
-https://www.kaggle.com/datasets/grassknoted/asl-alphabet
-(87,000 immagini 200x200)
+[(87,000 immagini 200x200)](https://www.kaggle.com/datasets/grassknoted/asl-alphabet)
 
 Nella cartella kaggle trovi diversi file:
     - cartella input: all'interno ci sono i dataset in formato csv, sia per test che per training.
@@ -14,7 +13,5 @@ NB! Sono scelte fatte a livello di codice nel creare la rete, non proprie del da
 
 
 ## Dataset roboflox
-https://public.roboflow.com/object-detection/american-sign-language-letters
-(1,700 immagini ) 
-Il video è molto più promettente.
+[(1,700 immagini)](https://public.roboflow.com/object-detection/american-sign-language-letters) 
 
