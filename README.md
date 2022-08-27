@@ -39,5 +39,10 @@ In realtà anche il primo esempio non ha un approccio molto differente.
 [Guida](https://towardsdatascience.com/the-practical-guide-for-object-detection-with-yolov5-algorithm-74c04aac4843)per il training di Yolov5, per capire meglio: [differenza fra batch ed epoch, SGD](https://machinelearningmastery.com/difference-between-a-batch-and-an-epoch/), a proposito di batch size: va bene mettere il valore più alto che l'hardware regga a livello di memoria, per me 16 con dataset roboflow mi riempiono già un 90% di ram (da 16GB). 
 Leggendo, si capisce che si può procedere o facendo un training da zero, migliore se si ha un buon dataset, oppure partire da un modello (passandolo in input come i pesi iniziali) e modificarlo. Anche qui ci sarà da scegliere in base a ciò che faremo.
 
-Ora 12.30 del 27/08 ho iniziato il training della rete, 150 epoche. Ci metterò qualche ora mi sa.... 
+Ora 12.30 del 27/08 ho iniziato il training della rete, 150 epoche. Ci metterò qualche ora mi sa....
+Ho finito due ore e mezza dopo. Ho caricato la rete risultante nella cartella yolo_first_try. All'interno ci sono vari grafici eccetera. L'ho costruita con il comando che trovi nel file code.ipynb nella cartella.
 
+Non sono partito da scratch per allenarla, ma da yolov5s6 (parametro weights) che già riconosce un certo numero di classi. Non so se convenga o no ai fini del risultato anche perchè a noi serve solo la mano.
+Come si può vedere dai grafici i risultati sembrano buonissimi. Nella tabella finale mi dà una precisione media di 0.9, che raggiunge 1 per certe lettere e scende ad 0.75 nei casi peggiori. 
+
+Ora manca la fase di Fine Tuning e di Validation. Comunque i risultati con la webcam e una luminosità meh sono già stra buoni
