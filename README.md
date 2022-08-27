@@ -36,5 +36,8 @@ Qui usano un approccio totalmente basato su Yolo inquadrando però direttamente 
 Potremmo anche pensare di creare un nostro semplice dataset per semplificarci un po' la vita come fa [questo simpatico indiano]( https://www.youtube.com/watch?v=1amn2nlYdSs). Si filma dalla webcam mentre fa i segni, poi frame per frame fa il labelling e poi si allena la sua Yolo. Penso che sia un approccio molto semplice ma molto specifico, che potrebbe avere problemi di adattamento ad altri mani/persone/ambienti. Potrebbe però essere una possibile strada. 
 In realtà anche il primo esempio non ha un approccio molto differente.
 
-[Guida](https://towardsdatascience.com/the-practical-guide-for-object-detection-with-yolov5-algorithm-74c04aac4843)per il training di Yolov5, per capire meglio: [differenza fra batch ed epoch, SGD](https://machinelearningmastery.com/difference-between-a-batch-and-an-epoch/). Leggendo, si capisce che si può procedere o facendo un training da zero, migliore se si ha un buon dataset, oppure partire da un modello (passandolo in input come i pesi iniziali) e modificarlo. Anche qui ci sarà da scegliere in base a ciò che faremo.
+[Guida](https://towardsdatascience.com/the-practical-guide-for-object-detection-with-yolov5-algorithm-74c04aac4843)per il training di Yolov5, per capire meglio: [differenza fra batch ed epoch, SGD](https://machinelearningmastery.com/difference-between-a-batch-and-an-epoch/), a proposito di batch size: va bene mettere il valore più alto che l'hardware regga a livello di memoria, per me 16 con dataset roboflow mi riempiono già un 90% di ram (da 16GB). 
+Leggendo, si capisce che si può procedere o facendo un training da zero, migliore se si ha un buon dataset, oppure partire da un modello (passandolo in input come i pesi iniziali) e modificarlo. Anche qui ci sarà da scegliere in base a ciò che faremo.
+
+Ora 12.30 del 27/08 ho iniziato il training della rete, 150 epoche. Ci metterò qualche ora mi sa.... 
 

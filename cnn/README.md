@@ -14,10 +14,12 @@ NB! Sono scelte fatte a livello di codice nel creare la rete, non proprie del da
 
 ## Dataset roboflox
 [(1,700 immagini)](https://public.roboflow.com/object-detection/american-sign-language-letters). L'ho scaricato come Yolov5 OBB (oriented bounding boxes TXT annotations), ci sono tutte le immagini, le labels ed il file conf yaml. 
+L'ho poi dovuto riscaricare nell'altra versione YOLOv5 Pytorch, l'altro non gli piaceva per il training, dice che è corrotto.
+
 
 Non sapevo se inserire YOLOv5 come [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) perchè è presa da git. Se modifichiamo qualcosa all'interno poi dove caricha i push? Non so come fare bene in realtà, forse è meglio tenerla fuori dal progetto.
 
-Il file Handseye.ipynb è una prima prova, va lanciato dentro la cartella yolo5.
+Il file Handseye.ipynb è una prima prova, va lanciato dentro la cartella yolo5, poi va aggiustato nella cartella del dataset il file data.yalm per i path.
 
 
 
