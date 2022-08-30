@@ -19,10 +19,11 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" >
 
-        <View
-            android:id="@+id/cameraView"
+        <androidx.camera.view.PreviewView
+            android:id="@+id/viewFinder"
             android:layout_width="match_parent"
-            android:layout_height="341dp" />
+            android:layout_height="match_parent"
+            tools:ignore="MissingClass" />
 
         <Button
             android:id="@+id/btnSee"

@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.*
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -34,7 +35,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
     //private var picture_bt: Button? = null
     private var analysis_bt: Button? = null
     //private var pView: PreviewView? = null
-    private var cameraView: ImageView? = null
+    private var viewFinder: PreviewView? = null
     private var imageCap: ImageCapture? = null
     private var imageAnl: ImageAnalysis? = null
     private var analysis_on = false
@@ -73,15 +74,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
 
          */
 
-        cameraView = findViewById(R.id.cameraView)
+        viewFinder = findViewById(R.id.viewFinder)
 
         analysis_on = false
         val provider: ListenableFuture<ProcessCameraProvider> =
             ProcessCameraProvider.getInstance(this)
         provider.addListener({
             try {
-                val cameraProvider: ProcessCameraProvider = provider.get()
-                startCamera(cameraProvider)
+                //val cameraProvider: ProcessCameraProvider = provider.get()
+                startCamera()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -141,29 +142,36 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
         }
     }
 
-    private fun startCamera(cameraProvider: ProcessCameraProvider) {
-        //unbind all the use cases from the lifecycle and remove them
-        cameraProvider.unbindAll()
-        //get a cameraselector, allowing to select the camera (front or back)
-        /*
-        val cameraSelector: CameraSelector =
-            Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
-        bind preview to preview view, images will flow on it
-        val prev: Preview = Builder().build()
-        prev.setSurfaceProvider(pView.getSurfaceProvider())
-        imageCap = Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
-        imageAnl =
-            Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-        imageAnl.setAnalyzer(executor, this)
-        cameraProvider.bindToLifecycle(
-            this as LifecycleOwner,
-            cameraSelector,
-            prev,
-            imageCap,
-            imageAnl
-        )
-    */
+        cameraProviderFuture.addListener({
+            // Used to bind the lifecycle of cameras to the lifecycle owner
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            // Preview
+            val preview = Preview.Builder()
+                .build()
+                .also {
+                    it.setSurfaceProvider(viewFinder!!.surfaceProvider)
+                }
+
+            // Select back camera as a default
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                // Unbind use cases before rebinding
+                cameraProvider.unbindAll()
+
+                // Bind use cases to camera
+                cameraProvider.bindToLifecycle(
+                    this, cameraSelector, preview)
+
+            } catch(exc: Exception) {
+                Log.e("Handseye App", "Use case binding failed", exc)
+            }
+
+        }, ContextCompat.getMainExecutor(this))
     }
 
     private val executor: Executor
@@ -227,7 +235,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
         if (analysis_on) {
             var conv = toBitmap(image)
             conv = toGrayscale(conv)
-            cameraView!!.setImageBitmap(conv)
+            //viewFinder!!.set .setImageBitmap(conv)
         }
         image.close()
     }
