@@ -1,56 +1,151 @@
 package com.example.handseye
 
 import android.Manifest
+import android.content.ContentValues
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.*
+import android.media.Image
+import android.os.Build
 import android.os.Bundle
-import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.LifecycleOwner
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.lang.Exception
-import java.nio.ByteBuffer
-import java.util.*
-import java.util.concurrent.Executor
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import com.google.common.util.concurrent.ListenableFuture
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.example.handseye.databinding.ActivityMainBinding
+import org.pytorch.LiteModuleLoader
+import org.pytorch.Module
+import java.io.*
+import java.nio.ByteBuffer
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
-class MainActivity : AppCompatActivity(), View.OnClickListener,
-    ImageAnalysis.Analyzer {
+typealias LumaListener = (luma: Double) -> Unit
+
+class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.Analyzer, Runnable{
+
+    private lateinit var viewBinding: ActivityMainBinding
+    
+    private val executor: Executor
+        private get() = ContextCompat.getMainExecutor(this)
+
+
     //private var picture_bt: Button? = null
     private var analysis_bt: Button? = null
     //private var pView: PreviewView? = null
     private var viewFinder: PreviewView? = null
-    private var imageCap: ImageCapture? = null
+    private var imageCapture: ImageCapture? = null
     private var imageAnl: ImageAnalysis? = null
     private var analysis_on = false
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        if (!checkPermission()) requestPermission()
+    private var mModule: Module? = null
+    private lateinit var cameraExecutor: ExecutorService
+    private val mBitmap: Bitmap? = null
 
-        /*if (! checkStoragePermission())
-            requestStoragePermission();
-        */
-        //picture_bt = findViewById(R.id.btnClick)
-        analysis_bt = findViewById(R.id.btnSee)
-        //pView = findViewById(R.id.previewView)
-        //picture_bt.setOnClickListener(this)
+    companion object {
+        private const val TAG = "Handseye"
+        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
+        private const val REQUEST_CODE_PERMISSIONS = 10
+        private val REQUIRED_PERMISSIONS =
+            mutableListOf (
+                Manifest.permission.CAMERA,
+            ).apply {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+            }.toTypedArray()
+    }
+
+
+    // This analyzer should implement fun analize, a function that would operate with the taken
+    // picture.
+    // Useful links:
+    //   pytorch mobile - https://github.com/pytorch/android-demo-app/tree/master/ObjectDetection
+    //   android app analyze - https://developer.android.com/codelabs/camerax-getting-started
+    private class YoloAnalyzer() : ImageAnalysis.Analyzer {
+
+        fun Image.toBitmap(): Bitmap {
+            val yBuffer = planes[0].buffer // Y
+            val vuBuffer = planes[2].buffer // VU
+
+            val ySize = yBuffer.remaining()
+            val vuSize = vuBuffer.remaining()
+
+            val nv21 = ByteArray(ySize + vuSize)
+
+            yBuffer.get(nv21, 0, ySize)
+            vuBuffer.get(nv21, ySize, vuSize)
+
+            val yuvImage = YuvImage(nv21, ImageFormat.NV21, this.width, this.height, null)
+            val out = ByteArrayOutputStream()
+            yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
+            val imageBytes = out.toByteArray()
+            return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        }
+
+        private fun ByteBuffer.toByteArray(): ByteArray {
+            rewind()    // Rewind the buffer to zero
+            val data = ByteArray(remaining())
+            get(data)   // Copy the buffer into a byte array
+            return data // Return the byte array
+        }
+
+        override fun analyze(image: ImageProxy) {
+
+            /*image.image.toBitmap()
+            val buffer = image.planes[0].buffer
+            val data = buffer.toByteArray()
+            val pixels = data.map { it.toInt() and 0xFF }
+            val luma = pixels.average()
+
+            listener(luma)
+
+            image.close()*/
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun assetFilePath(context: Context, assetName: String?): String? {
+        val file = File(context.filesDir, assetName)
+        if (file.exists() && file.length() > 0) {
+            return file.absolutePath
+        }
+        context.assets.open(assetName!!).use { `is` ->
+            FileOutputStream(file).use { os ->
+                val buffer = ByteArray(4 * 1024)
+                var read: Int
+                while (`is`.read(buffer).also { read = it } != -1) {
+                    os.write(buffer, 0, read)
+                }
+                os.flush()
+            }
+            return file.absolutePath
+        }
+    }
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+
+        super.onCreate(savedInstanceState)
+
+        viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
+
+        if (allPermissionsGranted()) {
+            startCamera()
+        } else {
+            ActivityCompat.requestPermissions(
+                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+        }
 
         /* NB:
             analysis_bt.setOnClickListener(this)
@@ -58,7 +153,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
             so Kotlin doesn't permit to use a smart cast.
             Following the right way to do it:
         */
-        analysis_bt?.let { it.setOnClickListener(this)}
+        viewBinding.btnSee.setOnClickListener { takePhoto() }
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        //analysis_bt?.setOnClickListener(capturePhoto())
         /* Explanation:
             let operator is a Kotlin Scope function which permits to execute in the object
             context, in which 'it' refers to the calling object.
@@ -74,9 +171,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
 
          */
 
-        viewFinder = findViewById(R.id.viewFinder)
+        //viewFinder = findViewById(R.id.viewFinder)
+        viewFinder = viewBinding.viewFinder
 
         analysis_on = false
+        /*
         val provider: ListenableFuture<ProcessCameraProvider> =
             ProcessCameraProvider.getInstance(this)
         provider.addListener({
@@ -87,19 +186,107 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
                 e.printStackTrace()
             }
         }, executor)
+        */
+        try {
+            mModule = LiteModuleLoader.load(
+                this.assetFilePath(
+                    applicationContext,
+                    "yolov5s.torchscript.ptl"
+                )
+            )
+            val br = BufferedReader(InputStreamReader(assets.open("classes.txt")))
+
+            var line: String?
+            val classes: MutableList<String?> = ArrayList()
+            while (br.readLine().also { line = it } != null) {
+                classes.add(line)
+            }
+            PrePostProcessor.mClasses = arrayOfNulls<String>(classes.size)
+            PrePostProcessor.mClasses = classes.toTypedArray()
+            //classes.toArray(PrePostProcessor.mClasses)
+        } catch (e: IOException) {
+            Log.e("Object Detection", "Error reading assets", e)
+            finish()
+        }
+
+    }
+
+    private fun takePhoto() {
+        // Get a stable reference of the modifiable image capture use case
+        val imageCapture = imageCapture ?: return
+
+        // Create time stamped name and MediaStore entry.
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+            .format(System.currentTimeMillis())
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/HandseyePics")
+            }
+        }
+
+        // Create output options object which contains file + metadata
+        val outputOptions = ImageCapture.OutputFileOptions
+            .Builder(contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues)
+            .build()
+
+        // Set up image capture listener, which is triggered after photo has
+        // been taken
+        imageCapture.takePicture(
+            outputOptions,
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun
+                        onImageSaved(output: ImageCapture.OutputFileResults){
+                    val msg = "Photo capture succeeded: ${output.savedUri}"
+                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Log.d(TAG, msg)
+                }
+            }
+        )
+    }
+
+    private fun detect(mBitmap : Bitmap){
+
+        var mImgScaleX = mBitmap.getWidth().toFloat() / PrePostProcessor.mInputWidth
+        var mImgScaleY = mBitmap.getHeight().toFloat() / PrePostProcessor.mInputHeight
+
+        /*var mIvScaleX = if (mBitmap.getWidth() > mBitmap.getHeight()) mImageView.getWidth()
+            .toFloat() / mBitmap.getWidth() else mImageView.getHeight()
+            .toFloat() / mBitmap.getHeight()
+        var mIvScaleY = if (mBitmap.getHeight() > mBitmap.getWidth()) mImageView.getHeight()
+            .toFloat() / mBitmap.getHeight() else mImageView.getWidth()
+            .toFloat() / mBitmap.getWidth()
+
+        var mStartX = (mImageView.getWidth() - mIvScaleX * mBitmap.getWidth()) / 2
+        var mStartY = (mImageView.getHeight() - mIvScaleY * mBitmap.getHeight()) / 2
+        */
+        val thread = Thread(this@MainActivity)
+        thread.start()
     }
 
     private fun requestPermission() {
         ActivityCompat.requestPermissions(
             this, arrayOf(Manifest.permission.CAMERA),
-            PERMISSION_REQUEST_CODE
+            REQUEST_CODE_PERMISSIONS
         )
     }
 
     private fun requestStoragePermission() {
         ActivityCompat.requestPermissions(
             this, arrayOf(Manifest.permission.MANAGE_EXTERNAL_STORAGE),
-            PERMISSION_REQUEST_CODE
+            REQUEST_CODE_PERMISSIONS
+        )
+        ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            REQUEST_CODE_PERMISSIONS
         )
     }
 
@@ -116,8 +303,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
         return if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.MANAGE_EXTERNAL_STORAGE
-            )
-            != PackageManager.PERMISSION_GRANTED
+            ) != PackageManager.PERMISSION_GRANTED
+            ||
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             //Permission is not granted
             false
@@ -125,19 +316,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
+        requestCode: Int, permissions: Array<String>, grantResults:
+        IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            PERMISSION_REQUEST_CODE -> if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                Toast.makeText(applicationContext, "Permission Granted", Toast.LENGTH_SHORT).show()
-
-                // everything is ok, move on
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
             } else {
-                Toast.makeText(applicationContext, "Permission denied", Toast.LENGTH_SHORT).show()
-                //Handle this... asking again or shutting down
+                Toast.makeText(this,
+                    "Permissions not granted by the user.",
+                    Toast.LENGTH_SHORT).show()
+                finish()
             }
         }
     }
@@ -153,8 +342,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(viewFinder!!.surfaceProvider)
+                    it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
+
+            // capture code
+            imageCapture = ImageCapture.Builder().build()
 
             // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -165,70 +357,64 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
 
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview)
+                    this, cameraSelector, preview, imageCapture)
 
             } catch(exc: Exception) {
-                Log.e("Handseye App", "Use case binding failed", exc)
+                Log.e(TAG, "Use case binding failed", exc)
             }
 
         }, ContextCompat.getMainExecutor(this))
-    }
 
-    private val executor: Executor
-        private get() = ContextCompat.getMainExecutor(this)
+    }
 
     override fun onClick(v: View) {
         when (v.id) {
             R.id.btnSee -> capturePhoto()
-            R.id.btnSee -> analysis_on = !analysis_on
+            //R.id.btnSee -> analysis_on = !analysis_on
         }
     }
 
     private fun capturePhoto() {
-        val photoDir = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                .toString() + "/CameraXPhotos"
-        )
-        if (!photoDir.exists()) {
-            Toast.makeText(
-                this@MainActivity,
-                "Photo dir didn't existed.$photoDir",
-                Toast.LENGTH_SHORT
-            ).show()
-            photoDir.mkdir()
+        print(" - - - - CAPTURING PICTURE - - - - ")
+        // Get a stable reference of the modifiable image capture use case
+        val imageCapture = imageCapture ?: return
+
+        // Create time stamped name and MediaStore entry.
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+            .format(System.currentTimeMillis())
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
+            }
         }
-        Toast.makeText(this@MainActivity, "Photo dir DID existed.$photoDir", Toast.LENGTH_SHORT)
-            .show()
-        val date = Date()
-        val timestamp = date.time.toString()
-        val photoFilePath = photoDir.absolutePath + "/" + timestamp + ".jpg"
-        val photoFile = File(photoFilePath)
-    /*
-        //using capture use case to run takepicture
-        imageCap.takePicture(
-            Builder(photoFile).build(),
-            executor,
-            object : OnImageSavedCallback() {
-                //manage success and failure
-                fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Photo has been saved successfully.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+
+        // Create output options object which contains file + metadata
+        val outputOptions = ImageCapture.OutputFileOptions
+            .Builder(contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues)
+            .build()
+
+        // Set up image capture listener, which is triggered after photo has
+        // been taken
+        imageCapture.takePicture(
+            outputOptions,
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
 
-                fun onError(exception: ImageCaptureException) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Error saving photo:" + exception.getMessage(),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                override fun
+                        onImageSaved(output: ImageCapture.OutputFileResults){
+                    val msg = "Photo capture succeeded: ${output.savedUri}"
+                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Log.d(TAG, msg)
                 }
             }
-
         )
-        */
     }
 
     override fun analyze(image: ImageProxy) {
@@ -280,7 +466,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
         return bmpGrayscale
     }
 
-    companion object {
-        private const val PERMISSION_REQUEST_CODE = 1
+    override fun run() {
+        TODO("Not yet implemented")
+    }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+            baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 }
