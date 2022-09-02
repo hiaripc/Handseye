@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.media.Image
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,8 +21,10 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.handseye.databinding.ActivityMainBinding
+import org.pytorch.IValue
 import org.pytorch.LiteModuleLoader
 import org.pytorch.Module
+import org.pytorch.torchvision.TensorImageUtils
 import java.io.*
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
@@ -29,6 +32,7 @@ import java.util.*
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -49,7 +53,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
     private var analysis_on = false
     private var mModule: Module? = null
     private lateinit var cameraExecutor: ExecutorService
-    private val mBitmap: Bitmap? = null
+    private lateinit var mBitmap: Bitmap
+    private var mResultView: ResultView? = null
+    private var detectionUri: Uri = Uri.parse(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() + "/Pictures/HandseyePics/detection.jpg")
+
+    private var mImgScaleX: Float? = null
+    private var mImgScaleY: Float? = null
+    private var mIvScaleX: Float? = null
+    private  var mIvScaleY:Float? = null
+    private  var mStartX:Float? = null
+    private  var mStartY:Float? = null
 
     companion object {
         private const val TAG = "Handseye"
@@ -62,6 +75,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
                 if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
                     add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 }
+                add(Manifest.permission.READ_EXTERNAL_STORAGE)
             }.toTypedArray()
     }
 
@@ -146,7 +160,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
-
+        mResultView = viewBinding.resultView
         /* NB:
             analysis_bt.setOnClickListener(this)
             You can't write this in Kotlin. That's cause analysis_bt is a variable,
@@ -154,6 +168,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
             Following the right way to do it:
         */
         viewBinding.btnSee.setOnClickListener { takePhoto() }
+        viewBinding.btnDetect.setOnClickListener { detect() }
         cameraExecutor = Executors.newSingleThreadExecutor()
         //analysis_bt?.setOnClickListener(capturePhoto())
         /* Explanation:
@@ -246,6 +261,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
+                    print(msg)
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                 }
@@ -253,10 +269,87 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
         )
     }
 
-    private fun detect(mBitmap : Bitmap){
+    private fun detect(){
+        print("Uri: " +detectionUri)
+        // Get a stable reference of the modifiable image capture use case
+        val imageCapture = imageCapture ?: return
 
-        var mImgScaleX = mBitmap.getWidth().toFloat() / PrePostProcessor.mInputWidth
-        var mImgScaleY = mBitmap.getHeight().toFloat() / PrePostProcessor.mInputHeight
+        // Create time stamped name and MediaStore entry.
+        val name = "detection"
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/HandseyePics")
+            }
+        }
+
+        // Create output options object which contains file + metadata
+        val outputOptions = ImageCapture.OutputFileOptions
+            .Builder(contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues)
+            .build()
+
+        // Set up image capture listener, which is triggered after photo has
+        // been taken
+
+        fun ImageProxy.convertImageProxyToBitmap(): Bitmap {
+            val buffer = planes[0].buffer
+            buffer.rewind()
+            val bytes = ByteArray(buffer.capacity())
+            buffer.get(bytes)
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }
+
+        imageCapture.takePicture(
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    super.onCaptureSuccess(image)
+
+                    val msg = "Detection..."
+                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Log.d(TAG, msg)
+                    mBitmap = image.convertImageProxyToBitmap()
+
+                    if (mImgScaleX == null) {
+                        mImgScaleX = mBitmap.width.toFloat() / PrePostProcessor.mInputWidth
+                        mImgScaleY = mBitmap.height.toFloat() / PrePostProcessor.mInputHeight
+
+                        mIvScaleX = if (mBitmap.width > mBitmap.height) viewFinder!!.getWidth()
+                            .toFloat() / mBitmap.width else viewFinder!!.getHeight().toFloat() / mBitmap.height
+                        mIvScaleY = if (mBitmap.height > mBitmap.width) viewFinder!!.getHeight()
+                            .toFloat() / mBitmap.height else viewFinder!!.getWidth().toFloat() / mBitmap.width
+
+                        mStartX = (viewFinder!!.getWidth() - mIvScaleX!! * mBitmap.width) / 2
+                        mStartY = (viewFinder!!.getHeight() - mIvScaleY!! * mBitmap.height) / 2
+                    }
+                    image.close()
+                    val thread = Thread(this@MainActivity)
+                    thread.start()
+                }
+            }
+            /*
+            object : ImageCapture.OnImageSavedCallback {
+
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun
+                        onImageSaved(output: ImageCapture.OutputFileResults){
+                    val msg = "Detection..."
+                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Log.d(TAG, msg)
+
+                    detectionUri = output.savedUri!!
+                    val thread = Thread(this@MainActivity)
+                    thread.start()
+                }
+            }*/
+        )
+
 
         /*var mIvScaleX = if (mBitmap.getWidth() > mBitmap.getHeight()) mImageView.getWidth()
             .toFloat() / mBitmap.getWidth() else mImageView.getHeight()
@@ -369,52 +462,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
 
     override fun onClick(v: View) {
         when (v.id) {
-            R.id.btnSee -> capturePhoto()
+            R.id.btnSee -> takePhoto()
             //R.id.btnSee -> analysis_on = !analysis_on
         }
-    }
-
-    private fun capturePhoto() {
-        print(" - - - - CAPTURING PICTURE - - - - ")
-        // Get a stable reference of the modifiable image capture use case
-        val imageCapture = imageCapture ?: return
-
-        // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-            .format(System.currentTimeMillis())
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
-            }
-        }
-
-        // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues)
-            .build()
-
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
-        imageCapture.takePicture(
-            outputOptions,
-            ContextCompat.getMainExecutor(this),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-                }
-
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
-                    val msg = "Photo capture succeeded: ${output.savedUri}"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
-                }
-            }
-        )
     }
 
     override fun analyze(image: ImageProxy) {
@@ -467,11 +517,91 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
     }
 
     override fun run() {
-        TODO("Not yet implemented")
+        Thread.sleep(100)
+        //val bitmap = BitmapFactory.decodeFile(detectionUri)
+
+        //val bitmap = BitmapFactory.decodeFile(detectionUri.path)
+
+        val resizedBitmap = Bitmap.createScaledBitmap(
+            mBitmap,
+            PrePostProcessor.mInputWidth,
+            PrePostProcessor.mInputHeight,
+            true
+        )
+        val inputTensor = TensorImageUtils.bitmapToFloat32Tensor(
+            resizedBitmap,
+            PrePostProcessor.NO_MEAN_RGB,
+            PrePostProcessor.NO_STD_RGB
+        )
+        val outputTuple = mModule!!.forward(IValue.from(inputTensor)).toTuple()
+        val outputTensor = outputTuple[0].toTensor()
+        val outputs = outputTensor.dataAsFloatArray
+        val results = PrePostProcessor.outputsToNMSPredictions(
+            outputs,
+            mImgScaleX!!,
+            mImgScaleY!!,
+            mIvScaleX!!,
+            mIvScaleY!!,
+            mStartX!!,
+            mStartY!!
+        )
+
+        runOnUiThread {
+            //mButtonDetect.setEnabled(true)
+            //mButtonDetect.setText(getString(R.string.detect))
+            //mProgressBar.setVisibility(ProgressBar.INVISIBLE)
+            mResultView!!.setResults(results)
+            mResultView!!.invalidate()
+            mResultView!!.setVisibility(View.VISIBLE)
+        }
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
+
+    /*private fun capturePhoto() {
+        print(" - - - - CAPTURING PICTURE - - - - ")
+        // Get a stable reference of the modifiable image capture use case
+        val imageCapture = imageCapture ?: return
+
+        // Create time stamped name and MediaStore entry.
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+            .format(System.currentTimeMillis())
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
+            }
+        }
+
+        // Create output options object which contains file + metadata
+        val outputOptions = ImageCapture.OutputFileOptions
+            .Builder(contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues)
+            .build()
+
+        // Set up image capture listener, which is triggered after photo has
+        // been taken
+
+        imageCapture.takePicture(
+            outputOptions,
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+
+                override fun
+                        onImageSaved(output: ImageCapture.OutputFileResults){
+                    val msg = "Photo capture succeeded: ${output.savedUri}"
+                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Log.d(TAG, msg)
+                }
+            }
+        )
+    }*/
 }

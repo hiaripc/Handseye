@@ -23,11 +23,26 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" >
 
-        <androidx.camera.view.PreviewView
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <androidx.camera.view.PreviewView
             android:id="@+id/viewFinder"
             android:layout_width="match_parent"
             android:layout_height="341dp"
             tools:ignore="MissingClass" />
+
+            <com.example.handseye.ResultView
+                android:id="@+id/resultView"
+                android:layout_width="match_parent"
+                android:layout_height="341dp"
+                android:layout_alignStart="@+id/viewFinder"
+                android:layout_alignEnd="@+id/viewFinder"
+                android:visibility="gone"
+                tools:visibility="gone" />
+
+        </RelativeLayout>
 
         <Button
             android:id="@+id/btnSee"
@@ -35,11 +50,18 @@
             android:layout_height="wrap_content"
             android:text="See!" />
 
+        <Button
+            android:id="@+id/btnDetect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Detect." />
+
         <TextView
             android:id="@+id/txtResult"
             android:layout_width="match_parent"
             android:layout_height="75dp"
             android:text="Result: " />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
