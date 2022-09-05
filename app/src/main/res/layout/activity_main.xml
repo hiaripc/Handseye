@@ -10,60 +10,59 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:layout_width="410dp"
-        android:layout_height="728dp"
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:layout_editor_absoluteX="1dp"
-        tools:layout_editor_absoluteY="1dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" >
+        app:layout_constraintVertical_bias="1.0">
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <androidx.camera.view.PreviewView
+        <androidx.camera.view.PreviewView
             android:id="@+id/viewFinder"
             android:layout_width="match_parent"
-            android:layout_height="341dp"
+            android:layout_height="match_parent"
             tools:ignore="MissingClass" />
 
-            <com.example.handseye.ResultView
-                android:id="@+id/resultView"
-                android:layout_width="match_parent"
-                android:layout_height="341dp"
-                android:layout_alignStart="@+id/viewFinder"
-                android:layout_alignEnd="@+id/viewFinder"
-                android:visibility="gone"
-                tools:visibility="gone" />
+        <com.example.handseye.ResultView
+            android:id="@+id/resultView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignStart="@+id/viewFinder"
+            android:layout_alignEnd="@+id/viewFinder"
+            android:visibility="visible"
+            tools:visibility="visible" />
 
-        </RelativeLayout>
-
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_alignParentBottom="true">
         <Button
             android:id="@+id/btnSee"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:text="See!" />
 
         <Button
             android:id="@+id/btnDetect"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:text="Detect." />
 
         <TextView
             android:id="@+id/txtResult"
             android:layout_width="match_parent"
-            android:layout_height="75dp"
+            android:layout_height="20dp"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"
             android:text="Result: " />
+        </LinearLayout>
 
-    </LinearLayout>
-
+    </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

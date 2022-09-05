@@ -54,8 +54,8 @@ dependencies {
     implementation "androidx.camera:camera-view:${cameraxVersion}"
     implementation "androidx.camera:camera-extensions:${cameraxVersion}"
 
-    implementation 'org.pytorch:pytorch_android_lite:1.10.0'
-    implementation 'org.pytorch:pytorch_android_torchvision_lite:1.10.0'
+    implementation 'org.pytorch:pytorch_android_lite:1.12.2'
+    implementation 'org.pytorch:pytorch_android_torchvision_lite:1.12.2'
 
 
 }

@@ -1,6 +1,7 @@
 package com.example.handseye
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
@@ -13,6 +14,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -35,8 +37,9 @@ import java.util.concurrent.Executors
 
 
 typealias LumaListener = (luma: Double) -> Unit
+typealias YoloListener = (results: ArrayList<Result>) -> Unit
 
-class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.Analyzer, Runnable{
+class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
 
     private lateinit var viewBinding: ActivityMainBinding
     
@@ -55,6 +58,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var mBitmap: Bitmap
     private var mResultView: ResultView? = null
+    private var txtResult: TextView? = null
     private var detectionUri: Uri = Uri.parse(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() + "/Pictures/HandseyePics/detection.jpg")
 
     private var mImgScaleX: Float? = null
@@ -79,13 +83,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
             }.toTypedArray()
     }
 
-
     // This analyzer should implement fun analize, a function that would operate with the taken
     // picture.
     // Useful links:
     //   pytorch mobile - https://github.com/pytorch/android-demo-app/tree/master/ObjectDetection
     //   android app analyze - https://developer.android.com/codelabs/camerax-getting-started
-    private class YoloAnalyzer() : ImageAnalysis.Analyzer {
+    private class YoloAnalyzer(val module: Module, val finderWidth: Int, val finderHeight: Int, private val listener: YoloListener) : ImageAnalysis.Analyzer {
 
         fun Image.toBitmap(): Bitmap {
             val yBuffer = planes[0].buffer // Y
@@ -113,17 +116,79 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
             return data // Return the byte array
         }
 
+        @SuppressLint("UnsafeOptInUsageError")
         override fun analyze(image: ImageProxy) {
+            // Create time stamped name and MediaStore entry.
 
-            /*image.image.toBitmap()
-            val buffer = image.planes[0].buffer
-            val data = buffer.toByteArray()
-            val pixels = data.map { it.toInt() and 0xFF }
-            val luma = pixels.average()
+            fun ImageProxy.convertImageProxyToBitmap(): Bitmap {
+                val buffer = planes[0].buffer
+                buffer.rewind()
+                val bytes = ByteArray(buffer.capacity())
+                buffer.get(bytes)
+                return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
 
-            listener(luma)
+            fun Image.imgToBitmap(): Bitmap? {
+                val yBuffer = planes[0].buffer
+                val uBuffer = planes[1].buffer
+                val vBuffer = planes[2].buffer
+                val ySize = yBuffer.remaining()
+                val uSize = uBuffer.remaining()
+                val vSize = vBuffer.remaining()
+                val nv21 = ByteArray(ySize + uSize + vSize)
+                yBuffer[nv21, 0, ySize]
+                vBuffer[nv21, ySize, vSize]
+                uBuffer[nv21, ySize + vSize, uSize]
+                val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
+                val out = ByteArrayOutputStream()
+                yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 75, out)
+                val imageBytes = out.toByteArray()
+                return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            }
 
-            image.close()*/
+            val bitmap : Bitmap? = image.image!!.imgToBitmap()
+
+            image.close()
+
+            val resizedBitmap = Bitmap.createScaledBitmap(
+                bitmap!!,
+                PrePostProcessor.mInputWidth,
+                PrePostProcessor.mInputHeight,
+                true
+            )
+            val inputTensor = TensorImageUtils.bitmapToFloat32Tensor(
+                resizedBitmap,
+                PrePostProcessor.NO_MEAN_RGB,
+                PrePostProcessor.NO_STD_RGB
+            )
+
+            val outputTuple = module.forward(IValue.from(inputTensor)).toTuple()
+            val outputTensor = outputTuple[0].toTensor()
+            val outputs = outputTensor.dataAsFloatArray
+
+            val mImgScaleX = bitmap.width.toFloat() / PrePostProcessor.mInputWidth
+            val mImgScaleY = bitmap.height.toFloat() / PrePostProcessor.mInputHeight
+
+            val mIvScaleX = if (bitmap.width > bitmap.height) finderWidth
+                .toFloat() / bitmap.width else finderHeight.toFloat() / bitmap.height
+            val mIvScaleY = if (bitmap.height > bitmap.width) finderHeight
+                .toFloat() / bitmap.height else finderWidth.toFloat() / bitmap.width
+
+            val mStartX = (finderWidth - mIvScaleX * bitmap.width) / 2
+            val mStartY = (finderHeight - mIvScaleY * bitmap.height) / 2
+
+            val results = PrePostProcessor.outputsToNMSPredictions(
+                outputs,
+                mImgScaleX,
+                mImgScaleY,
+                mIvScaleX,
+                mIvScaleY,
+                mStartX,
+                mStartY
+            )
+
+            listener(results)
+
         }
     }
 
@@ -161,6 +226,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
         mResultView = viewBinding.resultView
+        txtResult = viewBinding.txtResult
         /* NB:
             analysis_bt.setOnClickListener(this)
             You can't write this in Kotlin. That's cause analysis_bt is a variable,
@@ -206,10 +272,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
             mModule = LiteModuleLoader.load(
                 this.assetFilePath(
                     applicationContext,
-                    "yolov5s.torchscript.ptl"
+                    "best.torchscript.ptl"
                 )
             )
-            val br = BufferedReader(InputStreamReader(assets.open("classes.txt")))
+            val br = BufferedReader(InputStreamReader(assets.open("alphabet.txt")))
 
             var line: String?
             val classes: MutableList<String?> = ArrayList()
@@ -441,8 +507,33 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
             // capture code
             imageCapture = ImageCapture.Builder().build()
 
+            // analyze code
+            val imageAnalyzer = ImageAnalysis.Builder()
+                .build()
+                .also {
+                    it.setAnalyzer(cameraExecutor, YoloAnalyzer(mModule!!, viewFinder!!.width, viewFinder!!.height, { results ->
+                        Log.d(TAG, "Detection.")
+
+                        runOnUiThread {
+                            //mButtonDetect.setEnabled(true)
+                            //mButtonDetect.setText(getString(R.string.detect))
+                            //mProgressBar.setVisibility(ProgressBar.INVISIBLE)
+                            mResultView!!.setResults(results)
+                            mResultView!!.invalidate()
+                            mResultView!!.setVisibility(View.VISIBLE)
+                            var str : String = ""
+                            for( it in results)
+                                str += it.toString()
+                            txtResult!!.setText(str)
+                        }
+
+                    }))
+                }
+
             // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            // For debug purposes, front camera is easier to test
+            //val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
 
             try {
                 // Unbind use cases before rebinding
@@ -450,7 +541,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
 
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture)
+                    this, cameraSelector, preview, imageCapture, imageAnalyzer)
 
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -467,14 +558,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
         }
     }
 
-    override fun analyze(image: ImageProxy) {
+    /*override fun analyze(image: ImageProxy) {
         if (analysis_on) {
             var conv = toBitmap(image)
             conv = toGrayscale(conv)
             //viewFinder!!.set .setImageBitmap(conv)
         }
         image.close()
-    }
+    }*/
 
     private fun toBitmap(image: ImageProxy): Bitmap {
         val yBuffer: ByteBuffer = image.getPlanes().get(0).getBuffer()
@@ -517,7 +608,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
     }
 
     override fun run() {
-        Thread.sleep(100)
+        Thread.sleep(3000)
         //val bitmap = BitmapFactory.decodeFile(detectionUri)
 
         //val bitmap = BitmapFactory.decodeFile(detectionUri.path)
@@ -553,6 +644,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, ImageAnalysis.An
             mResultView!!.setResults(results)
             mResultView!!.invalidate()
             mResultView!!.setVisibility(View.VISIBLE)
+
         }
     }
 

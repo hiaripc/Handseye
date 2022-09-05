@@ -79,8 +79,8 @@
                 <arg>$USER_HOME$/.gradle/caches/transforms-3/9e0035b9abc35032a6fe969679b4d9cf/transformed/jetified-annotation-experimental-1.1.0-api.jar</arg>
                 <arg>$USER_HOME$/.gradle/caches/transforms-3/32ecf7e3edbf899a08196215aebebe82/transformed/jetified-listenablefuture-1.0.jar</arg>
                 <arg>$USER_HOME$/.gradle/caches/transforms-3/3db5a07429c1b1249c3394589bbf2b08/transformed/constraintlayout-2.1.2-api.jar</arg>
-                <arg>$USER_HOME$/.gradle/caches/transforms-3/e87b22adbfa1e119b0c4776b9b8e29d7/transformed/jetified-pytorch_android_lite-1.10.0-api.jar</arg>
-                <arg>$USER_HOME$/.gradle/caches/transforms-3/b52aa1af422bf343629ed082aa4cb68b/transformed/jetified-pytorch_android_torchvision_lite-1.10.0-api.jar</arg>
+                <arg>$USER_HOME$/.gradle/caches/transforms-3/d0a3924bdd9d09be089ea5d14e36a29b/transformed/jetified-pytorch_android_lite-1.12.2-api.jar</arg>
+                <arg>$USER_HOME$/.gradle/caches/transforms-3/94990a6fae9b124f31d3ecd81d1453e7/transformed/jetified-pytorch_android_torchvision_lite-1.12.2-api.jar</arg>
                 <arg>$USER_HOME$/Android/Sdk/platforms/android-31/android.jar</arg>
                 <arg>$USER_HOME$/Android/Sdk/build-tools/30.0.3/core-lambda-stubs.jar</arg>
               </args>
@@ -196,8 +196,8 @@
     <orderEntry type="library" scope="TEST" name="Gradle: androidx.camera:camera-video:1.1.0-beta01@aar" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: androidx.camera:camera-view:1.1.0-beta01@aar" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: androidx.camera:camera-extensions:1.1.0-beta01@aar" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.pytorch:pytorch_android_lite:1.10.0@aar" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.pytorch:pytorch_android_torchvision_lite:1.10.0@aar" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.pytorch:pytorch_android_lite:1.12.2@aar" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: org.pytorch:pytorch_android_torchvision_lite:1.12.2@aar" level="project" />
   </component>
   <component name="TestModuleProperties" production-module="Handseye.app.main" />
 </module>
