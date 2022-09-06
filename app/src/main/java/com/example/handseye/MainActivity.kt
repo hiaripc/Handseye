@@ -31,28 +31,18 @@ import java.io.*
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-
-typealias LumaListener = (luma: Double) -> Unit
 typealias YoloListener = (results: ArrayList<Result>) -> Unit
 
-class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
+class MainActivity : AppCompatActivity(), Runnable{
 
     private lateinit var viewBinding: ActivityMainBinding
-    
-    private val executor: Executor
-        private get() = ContextCompat.getMainExecutor(this)
 
-
-    //private var picture_bt: Button? = null
     private var analysis_bt: Button? = null
-    //private var pView: PreviewView? = null
     private var viewFinder: PreviewView? = null
     private var imageCapture: ImageCapture? = null
-    private var imageAnl: ImageAnalysis? = null
     private var analysis_on = false
     private var mModule: Module? = null
     private lateinit var cameraExecutor: ExecutorService
@@ -83,11 +73,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
             }.toTypedArray()
     }
 
-    // This analyzer should implement fun analize, a function that would operate with the taken
-    // picture.
-    // Useful links:
-    //   pytorch mobile - https://github.com/pytorch/android-demo-app/tree/master/ObjectDetection
-    //   android app analyze - https://developer.android.com/codelabs/camerax-getting-started
+    /*
+    This analyzer should implement fun analize, a function that would operate with the taken
+    picture. Useful links:
+    pytorch mobile - https://github.com/pytorch/android-demo-app/tree/master/ObjectDetection
+    android app analyze - https://developer.android.com/codelabs/camerax-getting-started
+    */
     private class YoloAnalyzer(val module: Module, val finderWidth: Int, val finderHeight: Int, private val listener: YoloListener) : ImageAnalysis.Analyzer {
 
         fun Image.toBitmap(): Bitmap {
@@ -225,17 +216,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
+
         mResultView = viewBinding.resultView
         txtResult = viewBinding.txtResult
-        /* NB:
-            analysis_bt.setOnClickListener(this)
-            You can't write this in Kotlin. That's cause analysis_bt is a variable,
-            so Kotlin doesn't permit to use a smart cast.
-            Following the right way to do it:
-        */
+        viewFinder = viewBinding.viewFinder
+
+
         viewBinding.btnSee.setOnClickListener { takePhoto() }
         viewBinding.btnDetect.setOnClickListener { detect() }
         cameraExecutor = Executors.newSingleThreadExecutor()
+
+        /* NB:
+        analysis_bt.setOnClickListener(this)
+        You can't write this in Kotlin. That's cause analysis_bt is a variable,
+        so Kotlin doesn't permit to use a smart cast.
+        Following the right way to do it:
+        */
         //analysis_bt?.setOnClickListener(capturePhoto())
         /* Explanation:
             let operator is a Kotlin Scope function which permits to execute in the object
@@ -249,32 +245,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
 
             The safe call operator '?.' only execute that action if the calling object is not null.
             It's the same to write if (b is not null).
-
          */
-
-        //viewFinder = findViewById(R.id.viewFinder)
-        viewFinder = viewBinding.viewFinder
-
         analysis_on = false
-        /*
-        val provider: ListenableFuture<ProcessCameraProvider> =
-            ProcessCameraProvider.getInstance(this)
-        provider.addListener({
-            try {
-                //val cameraProvider: ProcessCameraProvider = provider.get()
-                startCamera()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, executor)
-        */
+
         try {
+        /*  Loads the model which has to be saved into the assets folder
+            if the model changes, some proprieties of PrePostProcessor need to be modified:
+            inputWidth/Height, outputRow/Column
+        */
             mModule = LiteModuleLoader.load(
                 this.assetFilePath(
                     applicationContext,
                     "best.torchscript.ptl"
                 )
             )
+        /*  This line loades the classes detected by the chosen model, saved in the assets folder.
+            The PrePostProcessor needs these to label the objects.
+            Every row is a class.
+        */
             val br = BufferedReader(InputStreamReader(assets.open("alphabet.txt")))
 
             var line: String?
@@ -284,7 +272,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
             }
             PrePostProcessor.mClasses = arrayOfNulls<String>(classes.size)
             PrePostProcessor.mClasses = classes.toTypedArray()
-            //classes.toArray(PrePostProcessor.mClasses)
         } catch (e: IOException) {
             Log.e("Object Detection", "Error reading assets", e)
             finish()
@@ -395,83 +382,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
                     val thread = Thread(this@MainActivity)
                     thread.start()
                 }
-            }
-            /*
-            object : ImageCapture.OnImageSavedCallback {
-
-                override fun onError(exc: ImageCaptureException) {
-                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-                }
-
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
-                    val msg = "Detection..."
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
-
-                    detectionUri = output.savedUri!!
-                    val thread = Thread(this@MainActivity)
-                    thread.start()
-                }
-            }*/
-        )
-
-
-        /*var mIvScaleX = if (mBitmap.getWidth() > mBitmap.getHeight()) mImageView.getWidth()
-            .toFloat() / mBitmap.getWidth() else mImageView.getHeight()
-            .toFloat() / mBitmap.getHeight()
-        var mIvScaleY = if (mBitmap.getHeight() > mBitmap.getWidth()) mImageView.getHeight()
-            .toFloat() / mBitmap.getHeight() else mImageView.getWidth()
-            .toFloat() / mBitmap.getWidth()
-
-        var mStartX = (mImageView.getWidth() - mIvScaleX * mBitmap.getWidth()) / 2
-        var mStartY = (mImageView.getHeight() - mIvScaleY * mBitmap.getHeight()) / 2
-        */
+            })
         val thread = Thread(this@MainActivity)
         thread.start()
-    }
-
-    private fun requestPermission() {
-        ActivityCompat.requestPermissions(
-            this, arrayOf(Manifest.permission.CAMERA),
-            REQUEST_CODE_PERMISSIONS
-        )
-    }
-
-    private fun requestStoragePermission() {
-        ActivityCompat.requestPermissions(
-            this, arrayOf(Manifest.permission.MANAGE_EXTERNAL_STORAGE),
-            REQUEST_CODE_PERMISSIONS
-        )
-        ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            REQUEST_CODE_PERMISSIONS
-        )
-    }
-
-    private fun checkPermission(): Boolean {
-        return if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            //Permission is not granted
-            false
-        } else true
-    }
-
-    private fun checkStoragePermission(): Boolean {
-        return if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.MANAGE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-            ||
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            //Permission is not granted
-            false
-        } else true
     }
 
     override fun onRequestPermissionsResult(
@@ -551,62 +464,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
 
     }
 
-    override fun onClick(v: View) {
-        when (v.id) {
-            R.id.btnSee -> takePhoto()
-            //R.id.btnSee -> analysis_on = !analysis_on
-        }
-    }
-
-    /*override fun analyze(image: ImageProxy) {
-        if (analysis_on) {
-            var conv = toBitmap(image)
-            conv = toGrayscale(conv)
-            //viewFinder!!.set .setImageBitmap(conv)
-        }
-        image.close()
-    }*/
-
-    private fun toBitmap(image: ImageProxy): Bitmap {
-        val yBuffer: ByteBuffer = image.getPlanes().get(0).getBuffer()
-        val uBuffer: ByteBuffer = image.getPlanes().get(2).getBuffer()
-        val vBuffer: ByteBuffer = image.getPlanes().get(2).getBuffer()
-        val ySize = yBuffer.remaining()
-        val uSize = uBuffer.remaining()
-        val vSize = vBuffer.remaining()
-        val nv21 = ByteArray(ySize + uSize + vSize)
-        //U and V are swapped
-        yBuffer[nv21, 0, ySize]
-        vBuffer[nv21, 0, uSize]
-        uBuffer[nv21, 0, vSize]
-        val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null)
-        val out = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(Rect(0, 0, yuvImage.height, yuvImage.height), 75, out)
-        val imageBytes = out.toByteArray()
-        var res = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        val mat = Matrix()
-        //angle is the desired angle to rotate
-        mat.postRotate(90f)
-        res = Bitmap.createBitmap(res, 0, 0, res.width, res.height, mat, true)
-        return res
-    }
-
-    fun toGrayscale(bmpOriginal: Bitmap): Bitmap {
-        val width: Int
-        val height: Int
-        height = bmpOriginal.height
-        width = bmpOriginal.width
-        val bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val c = Canvas(bmpGrayscale)
-        val paint = Paint()
-        val cm = ColorMatrix()
-        cm.setSaturation(0f)
-        val f = ColorMatrixColorFilter(cm)
-        paint.colorFilter = f
-        c.drawBitmap(bmpOriginal, 0f, 0f, paint)
-        return bmpGrayscale
-    }
-
     override fun run() {
         Thread.sleep(3000)
         //val bitmap = BitmapFactory.decodeFile(detectionUri)
@@ -653,7 +510,52 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Runnable{
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
-    /*private fun capturePhoto() {
+    /* This code isn't used anymore, but it could be useful if we change direction for some reason.
+       If it's safe to delete this, proceed.
+
+    private fun toBitmap(image: ImageProxy): Bitmap {
+        val yBuffer: ByteBuffer = image.getPlanes().get(0).getBuffer()
+        val uBuffer: ByteBuffer = image.getPlanes().get(2).getBuffer()
+        val vBuffer: ByteBuffer = image.getPlanes().get(2).getBuffer()
+        val ySize = yBuffer.remaining()
+        val uSize = uBuffer.remaining()
+        val vSize = vBuffer.remaining()
+        val nv21 = ByteArray(ySize + uSize + vSize)
+        //U and V are swapped
+        yBuffer[nv21, 0, ySize]
+        vBuffer[nv21, 0, uSize]
+        uBuffer[nv21, 0, vSize]
+        val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null)
+        val out = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(Rect(0, 0, yuvImage.height, yuvImage.height), 75, out)
+        val imageBytes = out.toByteArray()
+        var res = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        val mat = Matrix()
+        //angle is the desired angle to rotate
+        mat.postRotate(90f)
+        res = Bitmap.createBitmap(res, 0, 0, res.width, res.height, mat, true)
+        return res
+    }
+
+    fun toGrayscale(bmpOriginal: Bitmap): Bitmap {
+        val width: Int
+        val height: Int
+        height = bmpOriginal.height
+        width = bmpOriginal.width
+        val bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmpGrayscale)
+        val paint = Paint()
+        val cm = ColorMatrix()
+        cm.setSaturation(0f)
+        val f = ColorMatrixColorFilter(cm)
+        paint.colorFilter = f
+        c.drawBitmap(bmpOriginal, 0f, 0f, paint)
+        return bmpGrayscale
+    }
+
+
+
+    private fun capturePhoto() {
         print(" - - - - CAPTURING PICTURE - - - - ")
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
