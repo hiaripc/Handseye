@@ -47,7 +47,7 @@ Come si può vedere dai grafici i risultati sembrano buonissimi. Nella tabella f
 
 Ora manca la fase di Fine Tuning e di Validation. Comunque i risultati con la webcam e una luminosità meh sono già stra buoni
 
-# 06SET2022 - APP
+## 06SET2022 - APP
 Il modello è stato importato nell'applicazione e reso funzionante, tuttavia la funzione di object detection in tempo reale è lenta e molto imprecisa. Da notare che non è stato completato il processo di Fine Tuning, Validation, e Quantizzazione della nostra rete.
 Per **esportare il modello** in una rete utilizzabile su mobile (PyTorch mobile) è stato necessario il file export.py (leggermente modificato, vedi readme [Object Detection](https://github.com/pytorch/android-demo-app/tree/master/ObjectDetection)) della libreria ultralytics/yolov5.
 Esempio: python3 **export.py** --weights path-to-file.pl --optimize --include torchscript

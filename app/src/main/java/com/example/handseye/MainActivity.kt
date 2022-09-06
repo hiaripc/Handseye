@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +27,6 @@ import org.pytorch.LiteModuleLoader
 import org.pytorch.Module
 import org.pytorch.torchvision.TensorImageUtils
 import java.io.*
-import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -40,7 +38,6 @@ class MainActivity : AppCompatActivity(), Runnable{
 
     private lateinit var viewBinding: ActivityMainBinding
 
-    private var analysis_bt: Button? = null
     private var viewFinder: PreviewView? = null
     private var imageCapture: ImageCapture? = null
     private var analysis_on = false
@@ -57,6 +54,9 @@ class MainActivity : AppCompatActivity(), Runnable{
     private  var mIvScaleY:Float? = null
     private  var mStartX:Float? = null
     private  var mStartY:Float? = null
+
+    private val model : String = "best.torchscript.ptl"
+    private val classes : String = "alphabet.txt"
 
     companion object {
         private const val TAG = "Handseye"
@@ -81,43 +81,8 @@ class MainActivity : AppCompatActivity(), Runnable{
     */
     private class YoloAnalyzer(val module: Module, val finderWidth: Int, val finderHeight: Int, private val listener: YoloListener) : ImageAnalysis.Analyzer {
 
-        fun Image.toBitmap(): Bitmap {
-            val yBuffer = planes[0].buffer // Y
-            val vuBuffer = planes[2].buffer // VU
-
-            val ySize = yBuffer.remaining()
-            val vuSize = vuBuffer.remaining()
-
-            val nv21 = ByteArray(ySize + vuSize)
-
-            yBuffer.get(nv21, 0, ySize)
-            vuBuffer.get(nv21, ySize, vuSize)
-
-            val yuvImage = YuvImage(nv21, ImageFormat.NV21, this.width, this.height, null)
-            val out = ByteArrayOutputStream()
-            yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
-            val imageBytes = out.toByteArray()
-            return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        }
-
-        private fun ByteBuffer.toByteArray(): ByteArray {
-            rewind()    // Rewind the buffer to zero
-            val data = ByteArray(remaining())
-            get(data)   // Copy the buffer into a byte array
-            return data // Return the byte array
-        }
-
         @SuppressLint("UnsafeOptInUsageError")
         override fun analyze(image: ImageProxy) {
-            // Create time stamped name and MediaStore entry.
-
-            fun ImageProxy.convertImageProxyToBitmap(): Bitmap {
-                val buffer = planes[0].buffer
-                buffer.rewind()
-                val bytes = ByteArray(buffer.capacity())
-                buffer.get(bytes)
-                return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            }
 
             fun Image.imgToBitmap(): Bitmap? {
                 val yBuffer = planes[0].buffer
@@ -256,14 +221,14 @@ class MainActivity : AppCompatActivity(), Runnable{
             mModule = LiteModuleLoader.load(
                 this.assetFilePath(
                     applicationContext,
-                    "best.torchscript.ptl"
+                    model
                 )
             )
         /*  This line loades the classes detected by the chosen model, saved in the assets folder.
             The PrePostProcessor needs these to label the objects.
             Every row is a class.
         */
-            val br = BufferedReader(InputStreamReader(assets.open("alphabet.txt")))
+            val br = BufferedReader(InputStreamReader(assets.open(classes)))
 
             var line: String?
             val classes: MutableList<String?> = ArrayList()
@@ -323,30 +288,12 @@ class MainActivity : AppCompatActivity(), Runnable{
     }
 
     private fun detect(){
-        print("Uri: " +detectionUri)
+        print("Uri: $detectionUri")
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
-        // Create time stamped name and MediaStore entry.
-        val name = "detection"
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/HandseyePics")
-            }
-        }
-
-        // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues)
-            .build()
-
         // Set up image capture listener, which is triggered after photo has
         // been taken
-
         fun ImageProxy.convertImageProxyToBitmap(): Bitmap {
             val buffer = planes[0].buffer
             buffer.rewind()
@@ -424,7 +371,7 @@ class MainActivity : AppCompatActivity(), Runnable{
             val imageAnalyzer = ImageAnalysis.Builder()
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor, YoloAnalyzer(mModule!!, viewFinder!!.width, viewFinder!!.height, { results ->
+                    it.setAnalyzer(cameraExecutor, YoloAnalyzer(mModule!!, viewFinder!!.width, viewFinder!!.height) { results ->
                         Log.d(TAG, "Detection.")
 
                         runOnUiThread {
@@ -433,15 +380,15 @@ class MainActivity : AppCompatActivity(), Runnable{
                             //mProgressBar.setVisibility(ProgressBar.INVISIBLE)
                             mResultView!!.setResults(results)
                             mResultView!!.invalidate()
-                            mResultView!!.setVisibility(View.VISIBLE)
-                            var str : String = ""
-                            for( it in results)
-                                str += it.toString()
-                            txtResult!!.setText(str)
+                            mResultView!!.visibility = View.VISIBLE
+                            var str = ""
+                            results.let {for(it in results) {str += it.toString()} }
+                            txtResult!!.text = str
                         }
 
-                    }))
+                    })
                 }
+            Log.d(TAG, "Backpressure strategy: ${imageAnalyzer.backpressureStrategy}")
 
             // Select back camera as a default
             // For debug purposes, front camera is easier to test
