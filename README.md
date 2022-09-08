@@ -61,3 +61,8 @@ Nel codice ci sono tante **Safe o Null Checked calls**, essendo nuovo a Kotlin n
 Riguardo a come debba funzionare l'applicazione, ho provato anche a **scattare e salvare una foto** per poi fare OD (modello yolov5s), con l'idea di non tenere attiva sempre la rete. Ci sono due problemi: salvare una foto aggiunge una latenza non indifferente il che causa problemi (rende impossibile questo approccio), e la rete deve essere sufficientemente veloce e precisa altrimenti si rischia di scattare una foto che non offre un risultato o ne offre uno errato.
 
 Nel progetto viene usiato il [ViewBinding](https://developer.android.com/topic/libraries/view-binding), uno strumento che rende più automatizzato il recupero dei widget delle view sul codice Kotlin/Java.
+
+## 08SET2022 - MODELLO E APP
+Il nostro modello personalizzato ha passato anche le fasi di fine tuning e validation. La precisione della rete è migliorata, ma dalla matrice di confusione si possono notare alcuni problemi nell'identificazione di certe lettere, probabilmente qualcosa andrà fatto. I risultati di questi processi si trovano nella cartella cnn/yolo-finetuned. Non sono pienamente soddisfatto comunque, chissà se sarà necessario fare qualcosa al dataset oppure allenarlo direttamente con un dataset più ampio.
+
+Per quanto riguarda l'applicazione, la precisione non sembra buona e il tempo di detection nemmeno. Non capisco la motivazione del primo problema, mentre per risolvere il secondo dovremo applicare qualche tecnica di quantizzazione (statica o dinamica, ad [esempio](https://pytorch.org/tutorials/advanced/static_quantization_tutorial.html)).

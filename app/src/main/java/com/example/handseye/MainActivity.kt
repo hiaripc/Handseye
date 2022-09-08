@@ -40,7 +40,9 @@ class MainActivity : AppCompatActivity(), Runnable{
 
     private var viewFinder: PreviewView? = null
     private var imageCapture: ImageCapture? = null
-    private var analysis_on = false
+    // this property if true adds the ImageAnalysis case to the lifecycle of the camera
+    // if false, real time analysis will not start
+    private var analysisOn = true
     private var mModule: Module? = null
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var mBitmap: Bitmap
@@ -55,7 +57,7 @@ class MainActivity : AppCompatActivity(), Runnable{
     private  var mStartX:Float? = null
     private  var mStartY:Float? = null
 
-    private val model : String = "best.torchscript.ptl"
+    private val model : String = "fine-tuned.torchscript.ptl"
     private val classes : String = "alphabet.txt"
 
     companion object {
@@ -211,7 +213,6 @@ class MainActivity : AppCompatActivity(), Runnable{
             The safe call operator '?.' only execute that action if the calling object is not null.
             It's the same to write if (b is not null).
          */
-        analysis_on = false
 
         try {
         /*  Loads the model which has to be saved into the assets folder
@@ -330,8 +331,6 @@ class MainActivity : AppCompatActivity(), Runnable{
                     thread.start()
                 }
             })
-        val thread = Thread(this@MainActivity)
-        thread.start()
     }
 
     override fun onRequestPermissionsResult(
@@ -400,9 +399,13 @@ class MainActivity : AppCompatActivity(), Runnable{
                 cameraProvider.unbindAll()
 
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture, imageAnalyzer)
-
+                if (analysisOn) {
+                    cameraProvider.bindToLifecycle(
+                        this, cameraSelector, preview, imageCapture, imageAnalyzer)
+                } else {
+                    cameraProvider.bindToLifecycle(
+                        this, cameraSelector, preview, imageCapture)
+                }
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
@@ -412,7 +415,7 @@ class MainActivity : AppCompatActivity(), Runnable{
     }
 
     override fun run() {
-        Thread.sleep(3000)
+        //Thread.sleep(3000)
         //val bitmap = BitmapFactory.decodeFile(detectionUri)
 
         //val bitmap = BitmapFactory.decodeFile(detectionUri.path)
