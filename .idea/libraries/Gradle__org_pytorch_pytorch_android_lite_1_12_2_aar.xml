@@ -1,15 +1,15 @@
 <component name="libraryTable">
   <library name="Gradle: org.pytorch:pytorch_android_lite:1.12.2@aar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/316eb6f9ae6dfabf6c48afd3a5baaadd/transformed/jetified-pytorch_android_lite-1.12.2/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/316eb6f9ae6dfabf6c48afd3a5baaadd/transformed/jetified-pytorch_android_lite-1.12.2/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/316eb6f9ae6dfabf6c48afd3a5baaadd/transformed/jetified-pytorch_android_lite-1.12.2/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-3/af109761feff86e8bcb5e8853808fc59/transformed/jetified-pytorch_android_lite-1.12.2/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/af109761feff86e8bcb5e8853808fc59/transformed/jetified-pytorch_android_lite-1.12.2/res" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/af109761feff86e8bcb5e8853808fc59/transformed/jetified-pytorch_android_lite-1.12.2/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_lite/1.12.2/cf4c3606f02a7cfcede61d388bcaa8bc179ad3a3/pytorch_android_lite-1.12.2-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_lite/1.12.2/cf4c3606f02a7cfcede61d388bcaa8bc179ad3a3/pytorch_android_lite-1.12.2-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_lite/1.12.2/b40033ef7e5551be82fa963a04a81b0ef0a6b87f/pytorch_android_lite-1.12.2-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_lite/1.12.2/b40033ef7e5551be82fa963a04a81b0ef0a6b87f/pytorch_android_lite-1.12.2-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

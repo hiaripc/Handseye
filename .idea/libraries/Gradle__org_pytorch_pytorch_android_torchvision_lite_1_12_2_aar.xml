@@ -1,15 +1,15 @@
 <component name="libraryTable">
   <library name="Gradle: org.pytorch:pytorch_android_torchvision_lite:1.12.2@aar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/e78b0d1b9c0da14cfb0900280fbfcabf/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/e78b0d1b9c0da14cfb0900280fbfcabf/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/e78b0d1b9c0da14cfb0900280fbfcabf/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-3/2fd112d9333d6bf2c1af2c6bca23e3b5/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/2fd112d9333d6bf2c1af2c6bca23e3b5/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/res" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/2fd112d9333d6bf2c1af2c6bca23e3b5/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_torchvision_lite/1.12.2/5d2f10557ba42da3e471f2e70adadcd780122e9/pytorch_android_torchvision_lite-1.12.2-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_torchvision_lite/1.12.2/5d2f10557ba42da3e471f2e70adadcd780122e9/pytorch_android_torchvision_lite-1.12.2-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_torchvision_lite/1.12.2/6e635df6f6fcf552f2f3ea6e57f844c6f9b4b69d/pytorch_android_torchvision_lite-1.12.2-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_torchvision_lite/1.12.2/6e635df6f6fcf552f2f3ea6e57f844c6f9b4b69d/pytorch_android_torchvision_lite-1.12.2-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
