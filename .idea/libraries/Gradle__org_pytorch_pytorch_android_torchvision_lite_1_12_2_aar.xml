@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: org.pytorch:pytorch_android_torchvision_lite:1.12.2@aar">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-3/2fd112d9333d6bf2c1af2c6bca23e3b5/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/jars/classes.jar!/" />
-      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/2fd112d9333d6bf2c1af2c6bca23e3b5/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/res" />
-      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/2fd112d9333d6bf2c1af2c6bca23e3b5/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/fc8267d129611f32d3a4b0b83d6f04c2/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-3/fc8267d129611f32d3a4b0b83d6f04c2/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/fc8267d129611f32d3a4b0b83d6f04c2/transformed/jetified-pytorch_android_torchvision_lite-1.12.2/res" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_torchvision_lite/1.12.2/5d2f10557ba42da3e471f2e70adadcd780122e9/pytorch_android_torchvision_lite-1.12.2-javadoc.jar!/" />

@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: org.pytorch:pytorch_android_lite:1.12.2@aar">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-3/af109761feff86e8bcb5e8853808fc59/transformed/jetified-pytorch_android_lite-1.12.2/jars/classes.jar!/" />
-      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/af109761feff86e8bcb5e8853808fc59/transformed/jetified-pytorch_android_lite-1.12.2/res" />
-      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/af109761feff86e8bcb5e8853808fc59/transformed/jetified-pytorch_android_lite-1.12.2/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/transforms-3/48887172ed3841664267568e6f1f59a6/transformed/jetified-pytorch_android_lite-1.12.2/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/48887172ed3841664267568e6f1f59a6/transformed/jetified-pytorch_android_lite-1.12.2/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../.gradle/caches/transforms-3/48887172ed3841664267568e6f1f59a6/transformed/jetified-pytorch_android_lite-1.12.2/res" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.pytorch/pytorch_android_lite/1.12.2/cf4c3606f02a7cfcede61d388bcaa8bc179ad3a3/pytorch_android_lite-1.12.2-javadoc.jar!/" />

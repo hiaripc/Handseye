@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -358,6 +359,7 @@ class MainActivity : AppCompatActivity(), Runnable{
 
             // Preview
             val preview = Preview.Builder()
+                .setTargetResolution(Size(640,480))
                 .build()
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
@@ -368,6 +370,7 @@ class MainActivity : AppCompatActivity(), Runnable{
 
             // analyze code
             val imageAnalyzer = ImageAnalysis.Builder()
+                .setTargetResolution(Size(640,480))
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor, YoloAnalyzer(mModule!!, viewFinder!!.width, viewFinder!!.height) { results ->
@@ -391,7 +394,6 @@ class MainActivity : AppCompatActivity(), Runnable{
 
             // Select back camera as a default
             // For debug purposes, front camera is easier to test
-            //val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
 
             try {
@@ -422,8 +424,8 @@ class MainActivity : AppCompatActivity(), Runnable{
 
         val resizedBitmap = Bitmap.createScaledBitmap(
             mBitmap,
-            PrePostProcessor.mInputWidth,
-            PrePostProcessor.mInputHeight,
+            PrePostProcessor.mInputWidth, //640
+            PrePostProcessor.mInputHeight, //640
             true
         )
         val inputTensor = TensorImageUtils.bitmapToFloat32Tensor(

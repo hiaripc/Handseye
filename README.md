@@ -66,3 +66,9 @@ Nel progetto viene usiato il [ViewBinding](https://developer.android.com/topic/l
 Il nostro modello personalizzato ha passato anche le fasi di fine tuning e validation. La precisione della rete è migliorata, ma dalla matrice di confusione si possono notare alcuni problemi nell'identificazione di certe lettere, probabilmente qualcosa andrà fatto. I risultati di questi processi si trovano nella cartella cnn/yolo-finetuned. Non sono pienamente soddisfatto comunque, chissà se sarà necessario fare qualcosa al dataset oppure allenarlo direttamente con un dataset più ampio.
 
 Per quanto riguarda l'applicazione, la precisione non sembra buona e il tempo di detection nemmeno. Non capisco la motivazione del primo problema, mentre per risolvere il secondo dovremo applicare qualche tecnica di quantizzazione (statica o dinamica, ad [esempio](https://pytorch.org/tutorials/advanced/static_quantization_tutorial.html)).
+
+
+## 21SET22 - Tentativi miglioria
+
+Un problema emerso riguardo la precisione potrebbe essere quello dell'image size. Con il detect di yolo, tutte le immagini passate alla rete hanno dimensione 640x640 in ingresso, allargando le immagini di test del dataset che hanno dimensione 419x419 Da webcam del pc utilizza invece 640x480, funzionando comunque bene.
+Guardando la [documentazione di camerax](https://developer.android.com/training/camerax/configuration) ho provato a settare size a 640x480, anche se in realtà c'è scritto che Image Analysis utilizza questa dimensione di default. 
