@@ -107,7 +107,8 @@ Tuttavia le stesse tre immagini provate all'interno dell'app caricate come immag
 
 ![alt text](relationMaterial/SimpleApp/2209/B)
 ![alt text](relationMaterial/SimpleApp/2209/A)
-![alt text](relationMaterial/SimpleApp/2209/I)
+![alt text](relationMaterial/SimpleApp/2209/I =10x15)
+<img src="relationMaterial/SimpleApp/2209/I" alt="I" width="10"/>
 
 
 
