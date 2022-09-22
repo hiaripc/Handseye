@@ -98,15 +98,15 @@ python detect.py --source 'dataset/test/images' --weights 'handseye/0.0_cnn/fine
 
 Il risultato è nella cartella relationMaterial/exp2209.
 Ad esempio: 
-![alt text](relationMaterial/DetectYolo/exp2209/B19_jpg.rf.69527cc1f34d694cc04e55db80ed9b1a.jpg)
-![alt text](relationMaterial/DetectYolo/exp2209/A22_jpg.rf.f02ad8558ce1c88213b4f83c0bc66bc8.jpg)
-![alt text](relationMaterial/DetectYolo/exp2209/T1_jpg.rf.877948f560962d1e267a72617d9e1ed4.jpg)
+<img src="relationMaterial/DetectYolo/exp2209/B19_jpg.rf.69527cc1f34d694cc04e55db80ed9b1a.jpg" alt="B" width="200"/>
+<img src="relationMaterial/DetectYolo/exp2209/A22_jpg.rf.f02ad8558ce1c88213b4f83c0bc66bc8.jpg" alt="A" width="200"/>
+<img src="relationMaterial/DetectYolo/exp2209/T1_jpg.rf.877948f560962d1e267a72617d9e1ed4.jpg" alt="T" width="200"/>
 
 Hanno tutte e tre una buona confidenza e un buon risultato.
 Tuttavia le stesse tre immagini provate all'interno dell'app caricate come immagini di test danno pessimi (se non sbagliati) risultati.
 
-![alt text](relationMaterial/SimpleApp/2209/B)
-![alt text](relationMaterial/SimpleApp/2209/A)
+<img src="relationMaterial/SimpleApp/2209/B" alt="B" width="200"/>
+<img src="relationMaterial/SimpleApp/2209/A" alt="A" width="200"/>
 <img src="relationMaterial/SimpleApp/2209/I" alt="I" width="200"/>
 
 
