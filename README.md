@@ -68,7 +68,47 @@ Il nostro modello personalizzato ha passato anche le fasi di fine tuning e valid
 Per quanto riguarda l'applicazione, la precisione non sembra buona e il tempo di detection nemmeno. Non capisco la motivazione del primo problema, mentre per risolvere il secondo dovremo applicare qualche tecnica di quantizzazione (statica o dinamica, ad [esempio](https://pytorch.org/tutorials/advanced/static_quantization_tutorial.html)).
 
 
-## 21SET22 - Tentativi miglioria
+## 21SET22 - Tentativo miglioria con size
 
 Un problema emerso riguardo la precisione potrebbe essere quello dell'image size. Con il detect di yolo, tutte le immagini passate alla rete hanno dimensione 640x640 in ingresso, allargando le immagini di test del dataset che hanno dimensione 419x419 Da webcam del pc utilizza invece 640x480, funzionando comunque bene.
 Guardando la [documentazione di camerax](https://developer.android.com/training/camerax/configuration) ho provato a settare size a 640x480, anche se in realtà c'è scritto che Image Analysis utilizza questa dimensione di default. 
+
+## 22SET22 - un brevissimo recap e strada da fare:
+L'applicazione base c'è. Tuttavia ha performance pessime.
+Per risolvere e capire bene qual è il punto di rottura, si applica il bel principio KISS (Keep it Simple, Stupid).
+
+Iniziamo con il semplificare al massimo l'applicazione: deve scattare una foto (o caricarla dalla galleria) e fare la detect su quella, dando il risultato. Così si potrà capire a quale punto le cose smettono di funzionare. In particolare,le domande a cui rispondere:
+    - E' un problema hardware? (Probabilmente no, dovrebbe solo impiegarci di più)
+    - Il porting nella versione lite?
+    - Le performance richieste dal real time detenction? (Probabile, visto hardware meno performante)
+    - Problemi di scala della camera? (Possibile)
+
+Una volta risposte queste domande e risolto il problema, ci si potrà concentrare sulle due migliorie possibili: l'app (che al momento sarà super basic) e la cnn, di cui sarà da capire il limite e se possiamo migliorarla (magari un altro dataset). Poi rendere l'app carina e capire cosa possiamo permetterci di fare.
+
+## 22SET22 - KISS
+Primo tentativo (di successo) 'TheSimpleApp': utilizzando [Object Detection](https://github.com/pytorch/android-demo-app/tree/master/ObjectDetection) applicazione ultra basic del tutto simile al risultato intermedio che si vuole, cambiandole cnn. E' bastato seguire la semplice guida del link ma NB!!! è necessario nella build gradle mettere la versione 1.12 di torch lite altrimenti non va (il nostro modello è troppo recente per la 1.10).
+
+**Risultato**
+Utilizzando le immagini di test del dataset il risultato è pessimo. Esempio: le lettere A e B sono riconosciute con una confidence di 0.30 (bassissima) e la M è confusa con una i. 
+Risposta alle domande: il problema non era legato al real time, nè a problemi di scala. Rimangono valide hardware e porting nella versione lite.
+Difatti, utilizzando il modello del momento abbiamo dei risultati molto buoni sulle immagini del test effettuato con: il comando (dalla cartella yolo)
+```
+python detect.py --source 'dataset/test/images' --weights 'handseye/0.0_cnn/fine-tuning-07092022/weights/best.pt'
+``` 
+
+Il risultato è nella cartella relationMaterial/exp2209.
+Ad esempio: 
+! [alt text](relationMaterial/DetectYolo/exp2209/B19_jpg.rf.69527cc1f34d694cc04e55db80ed9b1a.jpg)
+! [alt text](relationMaterial/DetectYolo/exp2209/A22_jpg.rf.f02ad8558ce1c88213b4f83c0bc66bc8.jpg)
+! [alt text](relationMaterial/DetectYolo/exp2209/T1_jpg.rf.877948f560962d1e267a72617d9e1ed4.jpg)
+
+Hanno tutte e tre una buona confidenza e un buon risultato.
+Tuttavia le stesse tre immagini provate all'interno dell'app caricate come immagini di test danno pessimi (se non sbagliati) risultati.
+
+! [alt text](relationMaterial/SimpleApp/2209/B)
+! [alt text](relationMaterial/SimpleApp/2209/A)
+! [alt text](relationMaterial/SimpleApp/2209/I)
+
+
+
+
