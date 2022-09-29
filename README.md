@@ -113,3 +113,8 @@ Tuttavia le stesse tre immagini provate all'interno dell'app caricate come immag
 Inoltre, provando la versione live, le statistiche sono le stesse: riconosce per esempio la B e la A sempre con confidenza 0.30, su diversi sfondi.
 Quindi il problema sta nel porting o nell'hardware limitato del telefono, non nel real time detenction.
 
+## 29SET22 - Considerazioni export
+### optimize_for_mobile
+La rete per essere utilizzata su mobile viene prima esportata in torchscript e convertita per il lite interpreter. Nel file export.py, il metodo export_torchscript viene chiamato se durante l'export si usa l'opzione --include torchscript. Un test è stato eseguito per comprendere la differenza in precisione e prestazione del modello con e senza utilizzo a monte del metodo 'optimize_for_mobile'. Il risultato è: senza ottimizzazione per mobile, il modello ha la stessa dimensione su disco e la stessa precisione, ma le prestazioni diminuiscono notevolmente rendendo l'app inutilizzabile. 'optimize_for_mobile' è necessario, [qui](https://pytorch.org/tutorials/recipes/mobile_perf.html) due righe in cui se ne parla.
+### save_for_lite_interpreter
+Non si trovano molte informazioni riguardo questa funzione, *sembra* sia solo una funzione che compatti il modello (Scriptmodule Torchscript) e lo renda leggibile all'interprete lite, senza modificarlo in alcun modo.
