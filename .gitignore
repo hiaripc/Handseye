@@ -1,1 +1,6 @@
 TheApp/local.properties
+.gradle
+TheApp/.gradle
+TheSimpleApp/.gradle
+TheSimpleApp/app/build/outputs/apk/debug/app-debug.apk
+TheApp/app/build/outputs/apk/debug/app-debug.apk
