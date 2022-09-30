@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "applicationId": "org.pytorch.demo.objectdetection",
+  "applicationId": "org.pytorch.demo.handseye",
   "variantType": "BASE_APK",
   "elements": []
 }

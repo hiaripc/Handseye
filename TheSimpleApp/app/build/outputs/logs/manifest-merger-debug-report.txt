@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
+ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
+INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
+INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
+INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
 MERGED from [com.google.android.material:material:1.6.1] /home/hiari/.gradle/caches/transforms-2/files-2.1/a0ebba694f8e6a95bc427eaef4894530/material-1.6.1/AndroidManifest.xml:17:1-26:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.4] /home/hiari/.gradle/caches/transforms-2/files-2.1/cdaa83194e29814d01eb1fc6312e9c9a/constraintlayout-2.0.4/AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat:1.2.0] /home/hiari/.gradle/caches/transforms-2/files-2.1/bf96d2b5a86ecd602a621e7e96856420/appcompat-1.2.0/AndroidManifest.xml:17:1-24:12
@@ -43,20 +43,20 @@ MERGED from [androidx.documentfile:documentfile:1.0.0] /home/hiari/.gradle/cache
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/hiari/.gradle/caches/transforms-2/files-2.1/d711f81259436f09ffdf0b48105165e3/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.print:print:1.0.0] /home/hiari/.gradle/caches/transforms-2/files-2.1/87e4a5cb4839ebd5d033fa0ae6227780/print-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.annotation:annotation-experimental:1.0.0] /home/hiari/.gradle/caches/transforms-2/files-2.1/1e0614212b25f4ae67724a3587ed8129/jetified-annotation-experimental-1.0.0/AndroidManifest.xml:17:1-24:12
-INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
-INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
+INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
+INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
+INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
 	package
-		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:3:5-47
+		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:3:5-40
 		INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
 		INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
 	android:versionName
 		INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
-		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
+		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
 		INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
 	android:versionCode
 		INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
-		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-31:12
+		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:1-26:12
 		INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
 	xmlns:android
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:2:11-69
@@ -69,7 +69,7 @@ ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:6:
 	android:name
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:6:22-62
 application
-ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:8:5-29:19
+ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:8:5-24:19
 MERGED from [com.google.android.material:material:1.6.1] /home/hiari/.gradle/caches/transforms-2/files-2.1/a0ebba694f8e6a95bc427eaef4894530/material-1.6.1/AndroidManifest.xml:24:5-20
 MERGED from [com.google.android.material:material:1.6.1] /home/hiari/.gradle/caches/transforms-2/files-2.1/a0ebba694f8e6a95bc427eaef4894530/material-1.6.1/AndroidManifest.xml:24:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.4] /home/hiari/.gradle/caches/transforms-2/files-2.1/cdaa83194e29814d01eb1fc6312e9c9a/constraintlayout-2.0.4/AndroidManifest.xml:9:5-20
@@ -94,7 +94,7 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/hiari
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:9:9-35
 	android:theme
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:14:9-40
-activity#org.pytorch.demo.objectdetection.MainActivity
+activity#org.pytorch.demo.handseye.MainActivity
 ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:15:9-23:20
 	android:screenOrientation
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:18:13-49
@@ -114,14 +114,6 @@ category#android.intent.category.LAUNCHER
 ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:21:17-77
 	android:name
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:21:27-74
-activity#org.pytorch.demo.objectdetection.ObjectDetectionActivity
-ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:24:9-28:20
-	android:screenOrientation
-		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:27:13-49
-	android:configChanges
-		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:26:13-48
-	android:name
-		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:25:13-52
 uses-sdk
 INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml

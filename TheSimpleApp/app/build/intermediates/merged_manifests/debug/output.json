@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "applicationId": "org.pytorch.demo.objectdetection",
+  "applicationId": "org.pytorch.demo.handseye",
   "variantType": "BASE_APK",
   "elements": [
     {
@@ -19,7 +19,7 @@
       },
       "path": "AndroidManifest.xml",
       "properties": {
-        "packageId": "org.pytorch.demo.objectdetection",
+        "packageId": "org.pytorch.demo.handseye",
         "split": "",
         "minSdkVersion": "28"
       }

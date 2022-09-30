@@ -5,12 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#673AB7"
-    tools:context="org.pytorch.demo.objectdetection.MainActivity">
+    tools:context="org.pytorch.demo.handseye.MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="341dp"
-        android:layout_height="475dp"
-        android:layout_marginTop="40dp"
+        android:id="@+id/constraintLayout"
+        android:layout_width="386dp"
+        android:layout_height="520dp"
+        android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -38,7 +39,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <org.pytorch.demo.objectdetection.ResultView
+        <org.pytorch.demo.handseye.ResultView
             android:id="@+id/resultView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -50,20 +51,15 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-    <!-- com.google.android.material.floatingactionbutton.FloatingActionButton
-    The select button has become the more appealing FloatingButton, such that
-    is possible to add more operations (in case).
-    -->
-
     <TextView
         android:id="@+id/textView"
         android:layout_width="345dp"
         android:layout_height="35dp"
-        android:layout_marginTop="532dp"
+        android:layout_marginTop="548dp"
         android:layout_marginEnd="16dp"
         android:text=""
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.66"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -71,10 +67,11 @@
         android:id="@+id/liveButton"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="44dp"
         android:text="@string/live"
         android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/textView" />
 
@@ -82,20 +79,21 @@
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
         android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/liveButton"
         app:layout_constraintEnd_toEndOf="@+id/liveButton"
-        app:layout_constraintStart_toStartOf="@+id/liveButton"
-        tools:layout_editor_absoluteY="584dp" />
+        app:layout_constraintStart_toStartOf="@+id/liveButton" />
 
-    <Button
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/selectButton"
-        android:layout_width="40dp"
-        android:layout_height="38dp"
-        android:layout_marginTop="68dp"
-        android:layout_marginEnd="16dp"
+        android:layout_width="52dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="68dp"
+        android:layout_marginTop="44dp"
         android:clickable="true"
-        app:layout_constraintEnd_toEndOf="@+id/textView"
+        app:layout_constraintStart_toEndOf="@+id/liveButton"
         app:layout_constraintTop_toBottomOf="@+id/textView"
-        app:srcCompat="@mipmap/ic_launcher_round" />
+        app:srcCompat="@android:drawable/ic_input_add" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,4 +1,4 @@
-org.pytorch.demo.objectdetection
+org.pytorch.demo.handseye
 anim abc_fade_in
 anim abc_fade_out
 anim abc_grow_fade_in_from_bottom
@@ -2531,6 +2531,7 @@ id clockwise
 id collapseActionView
 id compress
 id confirm_button
+id constraintLayout
 id container
 id content
 id contentPanel
@@ -2952,7 +2953,6 @@ layout abc_search_view
 layout abc_select_dialog_material
 layout abc_tooltip
 layout activity_main
-layout activity_object_detection
 layout custom_dialog
 layout design_bottom_navigation_item
 layout design_bottom_sheet_dialog
