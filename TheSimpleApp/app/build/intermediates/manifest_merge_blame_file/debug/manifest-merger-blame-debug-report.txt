@@ -6,77 +6,79 @@
 6
 7    <uses-sdk
 8        android:minSdkVersion="28"
-8-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml
-9        android:targetSdkVersion="30" />
-9-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml
+8-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
+9        android:targetSdkVersion="31" />
+9-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml
 10
 11    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-11-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:5:5-80
-11-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:5:22-77
+11-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:5:5-80
+11-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:5:22-77
 12    <uses-permission android:name="android.permission.CAMERA" />
-12-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:6:5-65
-12-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:6:22-62
+12-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:6:5-65
+12-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:6:22-62
 13
 14    <application
-14-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:8:5-28:19
+14-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:8:5-29:19
 15        android:allowBackup="true"
-15-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:9:9-35
+15-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:9:9-35
 16        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-16-->[androidx.core:core:1.3.1] /home/hiari/.gradle/caches/transforms-2/files-2.1/ae3468b444d41a56f261ecbb8448fe17/core-1.3.1/AndroidManifest.xml:24:18-86
+16-->[androidx.core:core:1.5.0] /home/hiari/.gradle/caches/transforms-2/files-2.1/20ef5b0ef65626922759a2312a98a5e9/core-1.5.0/AndroidManifest.xml:24:18-86
 17        android:debuggable="true"
 18        android:extractNativeLibs="false"
 19        android:icon="@mipmap/ic_launcher"
-19-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:10:9-43
+19-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:10:9-43
 20        android:label="@string/app_name"
-20-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:11:9-41
+20-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:11:9-41
 21        android:roundIcon="@mipmap/ic_launcher_round"
-21-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:12:9-54
+21-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:12:9-54
 22        android:supportsRtl="true"
-22-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:13:9-35
+22-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:13:9-35
 23        android:testOnly="true"
 24        android:theme="@style/AppTheme" >
-24-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:14:9-40
+24-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:14:9-40
 25        <activity
-25-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:15:9-22:20
+25-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:15:9-23:20
 26            android:name="org.pytorch.demo.objectdetection.MainActivity"
-26-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:15:19-47
+26-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:15:19-47
 27            android:configChanges="orientation"
-27-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:16:13-48
-28            android:screenOrientation="portrait" >
-28-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:17:13-49
-29            <intent-filter>
-29-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:18:13-21:29
-30                <action android:name="android.intent.action.MAIN" />
-30-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:19:17-69
-30-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:19:25-66
-31
-32                <category android:name="android.intent.category.LAUNCHER" />
-32-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:20:17-77
-32-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:20:27-74
-33            </intent-filter>
-34        </activity>
-35        <activity
-35-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:23:9-27:20
-36            android:name="org.pytorch.demo.objectdetection.ObjectDetectionActivity"
-36-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:24:13-52
-37            android:configChanges="orientation"
-37-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:25:13-48
-38            android:screenOrientation="portrait" >
-38-->/home/hiari/ObjectDetection/app/src/main/AndroidManifest.xml:26:13-49
-39        </activity>
-40
-41        <provider
-41-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:25:9-30:43
-42            android:name="androidx.camera.camera2.impl.Camera2Initializer"
-42-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:26:13-75
-43            android:authorities="org.pytorch.demo.objectdetection.camerax-init"
-43-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:27:13-64
-44            android:exported="false"
-44-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:28:13-37
-45            android:initOrder="100"
-45-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:29:13-36
-46            android:multiprocess="true" />
-46-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:30:13-40
-47    </application>
-48
-49</manifest>
+27-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:16:13-48
+28            android:exported="true"
+28-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:17:13-36
+29            android:screenOrientation="portrait" >
+29-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:18:13-49
+30            <intent-filter>
+30-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:19:13-22:29
+31                <action android:name="android.intent.action.MAIN" />
+31-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:20:17-69
+31-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:20:25-66
+32
+33                <category android:name="android.intent.category.LAUNCHER" />
+33-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:21:17-77
+33-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:21:27-74
+34            </intent-filter>
+35        </activity>
+36        <activity
+36-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:24:9-28:20
+37            android:name="org.pytorch.demo.objectdetection.ObjectDetectionActivity"
+37-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:25:13-52
+38            android:configChanges="orientation"
+38-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:26:13-48
+39            android:screenOrientation="portrait" >
+39-->/home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:27:13-49
+40        </activity>
+41
+42        <provider
+42-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:25:9-30:43
+43            android:name="androidx.camera.camera2.impl.Camera2Initializer"
+43-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:26:13-75
+44            android:authorities="org.pytorch.demo.objectdetection.camerax-init"
+44-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:27:13-64
+45            android:exported="false"
+45-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:28:13-37
+46            android:initOrder="100"
+46-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:29:13-36
+47            android:multiprocess="true" />
+47-->[androidx.camera:camera-camera2:1.0.0-alpha05] /home/hiari/.gradle/caches/transforms-2/files-2.1/03e258dd1a54bb78b5d34876ddcad997/jetified-camera-camera2-1.0.0-alpha05/AndroidManifest.xml:30:13-40
+48    </application>
+49
+50</manifest>

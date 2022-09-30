@@ -8,8 +8,14 @@ package org.pytorch.demo.objectdetection;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraX;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageAnalysisConfig;
+import androidx.camera.core.Preview;
+import androidx.camera.core.PreviewConfig;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleOwner;
 
 import android.Manifest;
 import android.content.Context;
@@ -22,9 +28,13 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Size;
+import android.view.TextureView;
 import android.view.View;
+import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -46,16 +56,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements Runnable {
-    private int mImageIndex = 0;
-    private String[] mTestImages = {"letter1.jpg","letter2.jpg","letter3.jpg","test1.png", "test2.jpg", "test3.png"};
 
     private ImageView mImageView;
     private ResultView mResultView;
-    private Button mButtonDetect;
     private ProgressBar mProgressBar;
     private Bitmap mBitmap = null;
     private Module mModule = null;
     private float mImgScaleX, mImgScaleY, mIvScaleX, mIvScaleY, mStartX, mStartY;
+    private long mLastAnalysisResultTime;
+    private ImageAnalysis imageAnalysis;
+    private Preview previewImage;
+    private LifecycleOwner lifecycleOwner = this;
 
     public static String assetFilePath(Context context, String assetName) throws IOException {
         File file = new File(context.getFilesDir(), assetName);
@@ -90,17 +101,16 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
         setContentView(R.layout.activity_main);
 
-        try {
-            mBitmap = BitmapFactory.decodeStream(getAssets().open(mTestImages[mImageIndex]));
-        } catch (IOException e) {
-            Log.e("Object Detection", "Error reading assets", e);
-            finish();
-        }
-
         mImageView = findViewById(R.id.imageView);
-        mImageView.setImageBitmap(mBitmap);
+        //Making it invisible, only visible if an image is loaded.
+        mImageView.setVisibility(View.INVISIBLE);
+        //mImageView.setImageBitmap(mBitmap);
         mResultView = findViewById(R.id.resultView);
         mResultView.setVisibility(View.INVISIBLE);
+
+        //Old Test button
+        /*
+        Removing the Test Button
 
         final Button buttonTest = findViewById(R.id.testButton);
         buttonTest.setText(("Test Image 1/3"));
@@ -118,46 +128,56 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                     finish();
                 }
             }
+
         });
+        */
 
-
+        //TODO Now it's a floating button, it's still a button? NO
         final Button buttonSelect = findViewById(R.id.selectButton);
-        buttonSelect.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+        buttonSelect.setOnClickListener((View v) -> {
                 mResultView.setVisibility(View.INVISIBLE);
-
+                //Probably Cancel is not more needed
                 final CharSequence[] options = { "Choose from Photos", "Take Picture", "Cancel" };
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("New Test Image");
 
-                builder.setItems(options, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int item) {
+                builder.setItems(options, (DialogInterface dialog, int item) ->{
                         if (options[item].equals("Take Picture")) {
+                            CameraX.unbind(previewImage,imageAnalysis);
                             Intent takePicture = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                             startActivityForResult(takePicture, 0);
                         }
                         else if (options[item].equals("Choose from Photos")) {
+                            CameraX.unbind(previewImage,imageAnalysis);
                             Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
                             startActivityForResult(pickPhoto , 1);
                         }
                         else if (options[item].equals("Cancel")) {
                             dialog.dismiss();
                         }
-                    }
                 });
                 builder.show();
-            }
         });
 
+        //CameraX.bindToLifecycle(lifecycleOwner, previewAnalysis, imageAnalysis);
+        setupCameraX();
+        CameraX.bindToLifecycle(lifecycleOwner,previewImage);
+        //TODO modify the liveButton, it has to
         final Button buttonLive = findViewById(R.id.liveButton);
-        buttonLive.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-              final Intent intent = new Intent(MainActivity.this, ObjectDetectionActivity.class);
-              startActivity(intent);
+        buttonLive.setOnClickListener((View v) -> {
+            if(!CameraX.isBound(imageAnalysis) && !CameraX.isBound(previewImage))
+                CameraX.bindToLifecycle(lifecycleOwner,previewImage,imageAnalysis);
+            if (!CameraX.isBound(imageAnalysis)) {
+                //setupCameraX();
+                CameraX.bindToLifecycle(lifecycleOwner,imageAnalysis);
             }
+
+
         });
 
+
+        // Old code for detection button. This must be automatically called and encapsulated in startDetection method. No more detect button. But the progress bar is staying.
+        /*
         mButtonDetect = findViewById(R.id.detectButton);
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mButtonDetect.setOnClickListener(new View.OnClickListener() {
@@ -179,6 +199,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                 thread.start();
             }
         });
+         */
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         try {
             mModule = LiteModuleLoader.load(MainActivity.assetFilePath(getApplicationContext(), "fine-tuned.torchscript.ptl"));
@@ -195,19 +217,77 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             finish();
         }
     }
+    //TODO divide the bind and the setup so it can be called again
+    private void setupCameraX() {
+        ImageAnalyser imageAnalyser = new ImageAnalyser(mResultView, getApplicationContext());
+        mResultView.setVisibility(View.VISIBLE);
 
+        final TextureView textureView = ((ViewStub) findViewById(R.id.object_detection_texture_view_stub))
+                .inflate()
+                .findViewById(R.id.object_detection_texture_view);
+        final PreviewConfig previewConfig = new PreviewConfig.Builder().build();
+        previewImage = new Preview(previewConfig);
+        previewImage.setOnPreviewOutputUpdateListener(output -> textureView.setSurfaceTexture(output.getSurfaceTexture()));
+
+        final ImageAnalysisConfig imageAnalysisConfig =
+                new ImageAnalysisConfig.Builder()
+                        .setTargetResolution(new Size(480, 640))
+                        .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+                        .build();
+        //.setCallbackHandler(mBackgroundHandler)
+        imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
+        imageAnalysis.setAnalyzer((image, rotationDegrees) -> {
+            if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 500) {
+                return;
+            }
+
+            final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(image, rotationDegrees);
+            if (result != null) {
+                mLastAnalysisResultTime = SystemClock.elapsedRealtime();
+                runOnUiThread(() -> applyToUiAnalyzeImageResult(result));
+            }
+        });
+
+        lifecycleOwner = this;
+        //CameraX.bindToLifecycle(this, previewAnalysis, imageAnalysis);
+
+    }
+
+    protected void applyToUiAnalyzeImageResult(ImageAnalyser.AnalysisResult result) {
+        mResultView.setResults(result.mResults);
+        mResultView.invalidate();
+    }
+
+    protected void startDetection(){
+        mProgressBar.setVisibility(ProgressBar.VISIBLE);
+
+        mImgScaleX = (float)mBitmap.getWidth() / PrePostProcessor.mInputWidth;
+        mImgScaleY = (float)mBitmap.getHeight() / PrePostProcessor.mInputHeight;
+
+        mIvScaleX = (mBitmap.getWidth() > mBitmap.getHeight() ? (float)mImageView.getWidth() / mBitmap.getWidth() : (float)mImageView.getHeight() / mBitmap.getHeight());
+        mIvScaleY  = (mBitmap.getHeight() > mBitmap.getWidth() ? (float)mImageView.getHeight() / mBitmap.getHeight() : (float)mImageView.getWidth() / mBitmap.getWidth());
+
+        mStartX = (mImageView.getWidth() - mIvScaleX * mBitmap.getWidth())/2;
+        mStartY = (mImageView.getHeight() -  mIvScaleY * mBitmap.getHeight())/2;
+
+        Thread thread = new Thread(MainActivity.this);
+        thread.start();
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_CANCELED) {
+            //Replacing liveView with mImageView
+            mImageView.setVisibility(View.VISIBLE);
             switch (requestCode) {
                 case 0:
                     if (resultCode == RESULT_OK && data != null) {
                         mBitmap = (Bitmap) data.getExtras().get("data");
                         Matrix matrix = new Matrix();
-                        matrix.postRotate(90.0f);
+                        //matrix.postRotate(90.0f);
                         mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
                         mImageView.setImageBitmap(mBitmap);
+                        startDetection();
                     }
                     break;
                 case 1:
@@ -223,12 +303,13 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                                 String picturePath = cursor.getString(columnIndex);
                                 mBitmap = BitmapFactory.decodeFile(picturePath);
                                 Matrix matrix = new Matrix();
-                                matrix.postRotate(90.0f);
+                                //matrix.postRotate(90.0f);
                                 mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
                                 mImageView.setImageBitmap(mBitmap);
                                 cursor.close();
                             }
                         }
+                        startDetection();
                     }
                     break;
             }
@@ -245,11 +326,12 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         final ArrayList<Result> results =  PrePostProcessor.outputsToNMSPredictions(outputs, mImgScaleX, mImgScaleY, mIvScaleX, mIvScaleY, mStartX, mStartY);
 
         runOnUiThread(() -> {
-            mButtonDetect.setEnabled(true);
-            mButtonDetect.setText(getString(R.string.detect));
+            //mButtonDetect.setEnabled(true);
+            //mButtonDetect.setText(getString(R.string.detect));
             mProgressBar.setVisibility(ProgressBar.INVISIBLE);
             mResultView.setResults(results);
             mResultView.invalidate();
+            //TODO maybe here is to change as well
             mResultView.setVisibility(View.VISIBLE);
         });
     }

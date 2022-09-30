@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+//Here the detection is made.
+
 public class ObjectDetectionActivity extends AbstractCameraXActivity<ObjectDetectionActivity.AnalysisResult> {
     private Module mModule = null;
     private ResultView mResultView;
@@ -38,11 +40,15 @@ public class ObjectDetectionActivity extends AbstractCameraXActivity<ObjectDetec
         }
     }
 
+
     @Override
     protected int getContentViewLayoutId() {
-        return R.layout.activity_object_detection;
+        //return R.layout.activity_object_detection;
+        return R.layout.activity_main;
+
     }
 
+    //TODO moving result view and obj_det_texture_view in the main design covering imagePreview
     @Override
     protected TextureView getCameraPreviewTextureView() {
         mResultView = findViewById(R.id.resultView);
@@ -51,6 +57,7 @@ public class ObjectDetectionActivity extends AbstractCameraXActivity<ObjectDetec
                 .findViewById(R.id.object_detection_texture_view);
     }
 
+    //Applies the result given by AnalysisResult on the view.
     @Override
     protected void applyToUiAnalyzeImageResult(AnalysisResult result) {
         mResultView.setResults(result.mResults);
@@ -80,6 +87,8 @@ public class ObjectDetectionActivity extends AbstractCameraXActivity<ObjectDetec
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
+
+    //Captures the images, analyse it with PrePostProcessor data, then draws on it and returns the results.
     @Override
     @WorkerThread
     @Nullable

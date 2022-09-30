@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="28"
-        android:targetSdkVersion="30" />
+        android:targetSdkVersion="31" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -25,6 +25,7 @@
         <activity
             android:name="org.pytorch.demo.objectdetection.MainActivity"
             android:configChanges="orientation"
+            android:exported="true"
             android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

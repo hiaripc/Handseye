@@ -17,7 +17,7 @@ import android.view.View;
 
 import java.util.ArrayList;
 
-
+//That's the class used to draw the results on the image.
 public class ResultView extends View {
 
     private final static int TEXT_X = 40;
