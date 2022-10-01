@@ -34,9 +34,13 @@ anim fragment_fade_exit
 anim fragment_fast_out_extra_slow_in
 anim fragment_open_enter
 anim fragment_open_exit
+anim from_bottom_anim
 anim mtrl_bottom_sheet_slide_in
 anim mtrl_bottom_sheet_slide_out
 anim mtrl_card_lowers_interpolator
+anim rotate_open_anim
+anim rotation_close_anim
+anim to_bottom_anim
 animator design_appbar_state_list_animator
 animator design_fab_hide_motion_spec
 animator design_fab_show_motion_spec
@@ -2362,7 +2366,10 @@ drawable design_ic_visibility
 drawable design_ic_visibility_off
 drawable design_password_eye
 drawable design_snackbar_background
+drawable ic_add
+drawable ic_book
 drawable ic_clock_black_24dp
+drawable ic_help
 drawable ic_keyboard_black_24dp
 drawable ic_launcher_background
 drawable ic_launcher_foreground
@@ -2373,6 +2380,8 @@ drawable ic_mtrl_checked_circle
 drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
+drawable ic_pickphoto
+drawable ic_takephoto
 drawable m3_appbar_background
 drawable m3_popupmenu_background_overlay
 drawable m3_radiobutton_ripple
@@ -2485,6 +2494,7 @@ id action_text
 id actions
 id activity_chooser_view_content
 id add
+id add_btn
 id alertTitle
 id aligned
 id all
@@ -2503,6 +2513,7 @@ id baseline
 id beginOnFirstDraw
 id beginning
 id blocking
+id book_btn
 id bottom
 id bounce
 id buttonPanel
@@ -2724,6 +2735,7 @@ id path
 id pathRelative
 id peekHeight
 id percent
+id pickphoto_btn
 id pin
 id position
 id postLayout
@@ -2761,7 +2773,6 @@ id search_mag_icon
 id search_plate
 id search_src_text
 id search_voice_btn
-id selectButton
 id select_dialog_listview
 id selected
 id selection_type
@@ -2810,6 +2821,7 @@ id tag_transition_group
 id tag_unhandled_key_event_manager
 id tag_unhandled_key_listeners
 id tag_window_insets_animation_callback
+id takephoto_btn
 id test_checkbox_android_button_tint
 id test_checkbox_app_button_tint
 id test_radiobutton_android_button_tint

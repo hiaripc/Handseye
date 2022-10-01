@@ -35,6 +35,8 @@ import android.util.Size;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewStub;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -70,6 +72,18 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     private Preview previewImage;
     private LifecycleOwner lifecycleOwner = this;
 
+    //Floating buttons
+    private Animation rotateOpen;
+    private Animation rotateClose;
+    private Animation fromBottom;
+    private Animation toBottom;
+    private FloatingActionButton btnPickphoto;
+    private FloatingActionButton btnTakephoto;
+    private FloatingActionButton btnBook;
+    private FloatingActionButton btnAdd;
+
+    private boolean clickedAdd = false;
+
     public static String assetFilePath(Context context, String assetName) throws IOException {
         File file = new File(context.getFilesDir(), assetName);
         if (file.exists() && file.length() > 0) {
@@ -103,15 +117,28 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
         setContentView(R.layout.activity_main);
 
+        rotateOpen = AnimationUtils.loadAnimation(this,R.anim.rotate_open_anim);
+        rotateClose = AnimationUtils.loadAnimation(this,R.anim.rotation_close_anim);
+        fromBottom = AnimationUtils.loadAnimation(this,R.anim.from_bottom_anim);
+        toBottom = AnimationUtils.loadAnimation(this,R.anim.to_bottom_anim);
+
         mImageView = findViewById(R.id.imageView);
         mImageView.setVisibility(View.INVISIBLE);
         mResultView = findViewById(R.id.resultView);
         mResultView.setVisibility(View.INVISIBLE);
 
+        btnPickphoto = findViewById(R.id.pickphoto_btn);
+        btnTakephoto = findViewById(R.id.takephoto_btn);
+        btnBook = findViewById(R.id.book_btn);
+
+
         //TODO Change it to a more appealing floating button (cancel option no more needed)
-        final FloatingActionButton buttonSelect = findViewById(R.id.selectButton);
-        buttonSelect.setOnClickListener((View v) -> {
+        btnAdd = findViewById(R.id.add_btn);
+        btnAdd.setOnClickListener((View v) -> {
                 mResultView.setVisibility(View.INVISIBLE);
+                clickedAdd = !clickedAdd;
+                showFloatingButtons(clickedAdd);
+                /*
                 final CharSequence[] options = { "Choose from Photos", "Take Picture", "Cancel" };
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("New Test Image");
@@ -132,14 +159,15 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                             dialog.dismiss();
                         }
                 });
-                builder.show();
+                builder.show();*/
         });
+
 
         setupCameraX();
         CameraX.bindToLifecycle(lifecycleOwner,previewImage);
 
-        final Button buttonLive = findViewById(R.id.liveButton);
-        buttonLive.setOnClickListener((View v) -> {
+        final Button btnLive = findViewById(R.id.liveButton);
+        btnLive.setOnClickListener((View v) -> {
             if(!CameraX.isBound(imageAnalysis) && !CameraX.isBound(previewImage))
                 CameraX.bindToLifecycle(lifecycleOwner,previewImage,imageAnalysis);
             if (!CameraX.isBound(imageAnalysis)) {
@@ -167,6 +195,31 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             finish();
         }
     }
+
+    private void showFloatingButtons(boolean clickedAdd) {
+        int visib;
+        if (clickedAdd)
+            visib = View.VISIBLE;
+        else visib = View.INVISIBLE;
+
+        btnTakephoto.setVisibility(visib);
+        btnPickphoto.setVisibility(visib);
+        btnBook.setVisibility(visib);
+
+        if(clickedAdd){
+            btnAdd.startAnimation(rotateOpen);
+            btnPickphoto.startAnimation(fromBottom);
+            btnBook.startAnimation(fromBottom);
+            btnTakephoto.startAnimation(fromBottom);
+        } else {
+            btnAdd.startAnimation(rotateClose);
+            btnTakephoto.startAnimation(toBottom);
+            btnTakephoto.startAnimation(toBottom);
+            btnTakephoto.startAnimation(toBottom);
+
+        }
+    }
+
     //TODO divide the bind and the setup so it can be called again
     //there's a problem with textureview, making it crashing
     private void setupCameraX() {

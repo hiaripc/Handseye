@@ -1,4 +1,4 @@
-#Fri Sep 30 19:13:29 CEST 2022
+#Sat Oct 01 11:29:41 CEST 2022
 base.1=/home/hiari/handseye/TheSimpleApp/app/build/intermediates/dex/debug/mergeProjectDexDebug/classes.dex
 path.1=classes.dex
 base.0=/home/hiari/handseye/TheSimpleApp/app/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex

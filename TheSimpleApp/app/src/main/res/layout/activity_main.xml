@@ -67,7 +67,7 @@
         android:id="@+id/liveButton"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="64dp"
         android:text="@string/live"
         android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="parent"
@@ -85,15 +85,57 @@
         app:layout_constraintEnd_toEndOf="@+id/liveButton"
         app:layout_constraintStart_toStartOf="@+id/liveButton" />
 
+    <!-- TODO extended floating button:
+    take photo, choose photo and show hands guideline-->
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/selectButton"
-        android:layout_width="52dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="68dp"
-        android:layout_marginTop="44dp"
+        android:id="@+id/add_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
         android:clickable="true"
-        app:layout_constraintStart_toEndOf="@+id/liveButton"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        android:focusable="true"
+        android:tint="@android:color/white"
+        android:backgroundTint="@color/colorAccent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_add" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/book_btn"
+        android:layout_width="65dp"
+        android:layout_height="54dp"
+        android:layout_marginBottom="12dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/add_btn"
+        app:layout_constraintEnd_toEndOf="@+id/add_btn"
+        app:srcCompat="@drawable/ic_book" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/pickphoto_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/book_btn"
+        app:layout_constraintEnd_toEndOf="@+id/book_btn"
+        app:srcCompat="@drawable/ic_pickphoto" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/takephoto_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:visibility="invisible"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@+id/pickphoto_btn"
+        app:layout_constraintEnd_toEndOf="@+id/pickphoto_btn"
+        app:srcCompat="@drawable/ic_takephoto" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
