@@ -48,10 +48,6 @@
         "source": "/home/hiari/handseye/TheSimpleApp/app/src/main/res/anim/to_bottom_anim.xml"
     },
     {
-        "merged": "/home/hiari/handseye/TheSimpleApp/app/build/intermediates/res/merged/debug/drawable_ic_help.xml.flat",
-        "source": "/home/hiari/handseye/TheSimpleApp/app/src/main/res/drawable/ic_help.xml"
-    },
-    {
         "merged": "/home/hiari/handseye/TheSimpleApp/app/build/intermediates/res/merged/debug/mipmap-xhdpi_ic_launcher_round.png.flat",
         "source": "/home/hiari/handseye/TheSimpleApp/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png"
     },

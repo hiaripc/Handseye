@@ -2369,7 +2369,6 @@ drawable design_snackbar_background
 drawable ic_add
 drawable ic_book
 drawable ic_clock_black_24dp
-drawable ic_help
 drawable ic_keyboard_black_24dp
 drawable ic_launcher_background
 drawable ic_launcher_foreground

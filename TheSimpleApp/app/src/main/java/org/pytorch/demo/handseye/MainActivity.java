@@ -6,7 +6,6 @@
 
 package org.pytorch.demo.handseye;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraX;
 import androidx.camera.core.ImageAnalysis;
@@ -19,7 +18,6 @@ import androidx.lifecycle.LifecycleOwner;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -132,34 +130,24 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         btnBook = findViewById(R.id.book_btn);
 
 
-        //TODO Change it to a more appealing floating button (cancel option no more needed)
         btnAdd = findViewById(R.id.add_btn);
         btnAdd.setOnClickListener((View v) -> {
                 mResultView.setVisibility(View.INVISIBLE);
-                clickedAdd = !clickedAdd;
-                showFloatingButtons(clickedAdd);
-                /*
-                final CharSequence[] options = { "Choose from Photos", "Take Picture", "Cancel" };
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("New Test Image");
+                manageFloatingButtons();
+        });
 
-                builder.setItems(options, (DialogInterface dialog, int item) ->{
-                        if (options[item].equals("Take Picture")) {
-                            //todo would be great to find a way to just capture clicking the liveButton once..
-                            CameraX.unbind(previewImage,imageAnalysis);
-                            Intent takePicture = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                            startActivityForResult(takePicture, 0);
-                        }
-                        else if (options[item].equals("Choose from Photos")) {
-                            CameraX.unbind(previewImage,imageAnalysis);
-                            Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-                            startActivityForResult(pickPhoto , 1);
-                        }
-                        else if (options[item].equals("Cancel")) {
-                            dialog.dismiss();
-                        }
-                });
-                builder.show();*/
+        btnTakephoto.setOnClickListener((View v) -> {
+            CameraX.unbind(previewImage, imageAnalysis);
+            manageFloatingButtons();
+            Intent takePicture = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(takePicture, 0);
+        });
+
+        btnPickphoto.setOnClickListener((View v) -> {
+            CameraX.unbind(previewImage,imageAnalysis);
+            manageFloatingButtons();
+            Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+            startActivityForResult(pickPhoto , 1);
         });
 
 
@@ -196,7 +184,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         }
     }
 
-    private void showFloatingButtons(boolean clickedAdd) {
+    private void manageFloatingButtons() {
+        clickedAdd = !clickedAdd;
         int visib;
         if (clickedAdd)
             visib = View.VISIBLE;
