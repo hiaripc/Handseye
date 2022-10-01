@@ -8,10 +8,6 @@
         "source": "/home/hiari/handseye/TheSimpleApp/app/src/debug/res/drawable/ic_launcher_foreground.xml"
     },
     {
-        "merged": "/home/hiari/handseye/TheSimpleApp/app/build/intermediates/res/merged/debug/layout_texture_view.xml.flat",
-        "source": "/home/hiari/handseye/TheSimpleApp/app/src/main/res/layout/texture_view.xml"
-    },
-    {
         "merged": "/home/hiari/handseye/TheSimpleApp/app/build/intermediates/res/merged/debug/drawable_ic_add.xml.flat",
         "source": "/home/hiari/handseye/TheSimpleApp/app/src/main/res/drawable/ic_add.xml"
     },

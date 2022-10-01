@@ -24,7 +24,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
+import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -33,20 +33,16 @@ import android.util.Log;
 import android.util.Size;
 import android.view.TextureView;
 import android.view.View;
-import android.view.ViewStub;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import org.pytorch.IValue;
 import org.pytorch.LiteModuleLoader;
 import org.pytorch.Module;
-import org.pytorch.Tensor;
-import org.pytorch.torchvision.TensorImageUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -63,10 +59,11 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mImageView;
     private ResultView mResultView;
     private TextureView mtextureView;
+    private SurfaceTexture mSurfaceTexture;
+    PreviewConfig previewConfig;
     private ProgressBar mProgressBar;
     private Bitmap mBitmap = null;
-    private Module mModule = null;
-    private float mImgScaleX, mImgScaleY, mIvScaleX, mIvScaleY, mStartX, mStartY;
+    private Module mModule;
     private long mLastAnalysisResultTime;
     private ImageAnalysis imageAnalysis;
     private Preview previewImage;
@@ -137,9 +134,7 @@ public class MainActivity extends AppCompatActivity {
         cameraBinding("bind", new UseCase[]{previewImage});
 
         btnAdd = findViewById(R.id.add_btn);
-        btnAdd.setOnClickListener((View v) -> {
-            manageFloatingButtons();
-        });
+        btnAdd.setOnClickListener((View v) -> manageFloatingButtons());
 
         btnTakephoto.setOnClickListener((View v) -> {
             cameraBinding("unbind", new UseCase[]{previewImage, imageAnalysis});
@@ -155,9 +150,21 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(pickPhoto, 1);
         });
 
+        btnBook.setOnClickListener((View v) -> {
+            manageFloatingButtons();
+            cameraBinding("unbind", new UseCase[]{previewImage, imageAnalysis});
+            mImageView.setVisibility(View.VISIBLE);
+            try {
+                mImageView.setImageBitmap(BitmapFactory.decodeFile(assetFilePath(getApplicationContext(),"book.jpg")));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
         btnLive = findViewById(R.id.liveButton);
         btnLive.setOnClickListener((View v) -> {
             mImageView.setVisibility(View.INVISIBLE);
+            setupCameraX();
             cameraBinding("bind", new UseCase[]{previewImage, imageAnalysis});
         });
 
@@ -218,34 +225,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //TODO divide the bind and the setup so it can be called again
-    //there's a problem with textureview, making it crashing
+
     private void setupCameraX() {
+        CameraX.unbindAll();
         imageAnalyser = new ImageAnalyser(mResultView, getApplicationContext());
-        //mResultView.setVisibility(View.VISIBLE);
-    /*
-        (ViewStub) findViewById(R.id.object_detection_texture_view_stub))
-                .inflate()
-                .
-      */
         mtextureView = findViewById(R.id.object_detection_texture_view);
-        final PreviewConfig previewConfig = new PreviewConfig.Builder().build();
+
+        previewConfig = new PreviewConfig.Builder().build();
         previewImage = new Preview(previewConfig);
-        previewImage.setOnPreviewOutputUpdateListener(output -> mtextureView.setSurfaceTexture(output.getSurfaceTexture()));
+        previewImage.setOnPreviewOutputUpdateListener(output -> {
+            //Code here is to prevent the crashing after taking/picking a picture.
+            ViewGroup parent = (ViewGroup) mtextureView.getParent();
+            parent.removeView(mtextureView);
+            parent.addView(mtextureView,0);
+            mSurfaceTexture = output.getSurfaceTexture();
+            mtextureView.setSurfaceTexture(mSurfaceTexture);});
 
         final ImageAnalysisConfig imageAnalysisConfig =
                 new ImageAnalysisConfig.Builder()
                         .setTargetResolution(new Size(480, 640))
                         .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
                         .build();
-        //.setCallbackHandler(mBackgroundHandler)
 
         imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
         imageAnalysis.setAnalyzer((image, rotationDegrees) -> {
             if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 500) {
                 return;
             }
-
             final ImageAnalyser.AnalysisResult result = imageAnalyser.
                     analyzeImage(imageAnalyser.imgToBitmap(image.getImage()), 90);
             if (result != null) {
@@ -253,8 +259,6 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> applyToUiAnalyzeImageResult(result));
             }
         });
-
-        lifecycleOwner = this;
     }
 
     protected void detect(Bitmap bitmap) {

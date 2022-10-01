@@ -3052,7 +3052,6 @@ int layout text_view_with_line_height_from_layout 0x7f0b0073
 int layout text_view_with_line_height_from_style 0x7f0b0074
 int layout text_view_with_theme_line_height 0x7f0b0075
 int layout text_view_without_line_height 0x7f0b0076
-int layout texture_view 0x7f0b0077
 int mipmap ic_launcher 0x7f0c0000
 int mipmap ic_launcher_round 0x7f0c0001
 int plurals mtrl_badge_content_description 0x7f0d0000
