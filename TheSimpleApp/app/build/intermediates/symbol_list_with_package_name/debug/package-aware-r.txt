@@ -1179,6 +1179,7 @@ color foreground_material_dark
 color foreground_material_light
 color highlighted_text_material_dark
 color highlighted_text_material_light
+color ic_launcher_background
 color m3_appbar_overlay_color
 color m3_assist_chip_icon_tint_color
 color m3_assist_chip_stroke_color
@@ -2370,7 +2371,6 @@ drawable ic_add
 drawable ic_book
 drawable ic_clock_black_24dp
 drawable ic_keyboard_black_24dp
-drawable ic_launcher_background
 drawable ic_launcher_foreground
 drawable ic_m3_chip_check
 drawable ic_m3_chip_checked_circle
@@ -2718,7 +2718,6 @@ id notification_background
 id notification_main_column
 id notification_main_column_container
 id object_detection_texture_view
-id object_detection_texture_view_stub
 id off
 id on
 id outline

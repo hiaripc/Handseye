@@ -87,7 +87,7 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/hiari
 	android:label
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:11:9-41
 	android:roundIcon
-		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:12:9-54
+		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:12:9-61
 	android:icon
 		ADDED from /home/hiari/handseye/TheSimpleApp/app/src/main/AndroidManifest.xml:10:9-43
 	android:allowBackup

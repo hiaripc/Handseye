@@ -12,6 +12,7 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageAnalysisConfig;
 import androidx.camera.core.Preview;
 import androidx.camera.core.PreviewConfig;
+import androidx.camera.core.UseCase;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
@@ -57,10 +58,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements Runnable {
+public class MainActivity extends AppCompatActivity {
 
     private ImageView mImageView;
     private ResultView mResultView;
+    private TextureView mtextureView;
     private ProgressBar mProgressBar;
     private Bitmap mBitmap = null;
     private Module mModule = null;
@@ -68,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     private long mLastAnalysisResultTime;
     private ImageAnalysis imageAnalysis;
     private Preview previewImage;
+    private ImageAnalyser imageAnalyser;
     private LifecycleOwner lifecycleOwner = this;
 
     //Floating buttons
@@ -79,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     private FloatingActionButton btnTakephoto;
     private FloatingActionButton btnBook;
     private FloatingActionButton btnAdd;
+    private FloatingActionButton btnLive;
 
     private boolean clickedAdd = false;
 
@@ -115,10 +119,10 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
         setContentView(R.layout.activity_main);
 
-        rotateOpen = AnimationUtils.loadAnimation(this,R.anim.rotate_open_anim);
-        rotateClose = AnimationUtils.loadAnimation(this,R.anim.rotation_close_anim);
-        fromBottom = AnimationUtils.loadAnimation(this,R.anim.from_bottom_anim);
-        toBottom = AnimationUtils.loadAnimation(this,R.anim.to_bottom_anim);
+        rotateOpen = AnimationUtils.loadAnimation(this, R.anim.rotate_open_anim);
+        rotateClose = AnimationUtils.loadAnimation(this, R.anim.rotation_close_anim);
+        fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom_anim);
+        toBottom = AnimationUtils.loadAnimation(this, R.anim.to_bottom_anim);
 
         mImageView = findViewById(R.id.imageView);
         mImageView.setVisibility(View.INVISIBLE);
@@ -129,41 +133,32 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         btnTakephoto = findViewById(R.id.takephoto_btn);
         btnBook = findViewById(R.id.book_btn);
 
+        setupCameraX();
+        cameraBinding("bind", new UseCase[]{previewImage});
 
         btnAdd = findViewById(R.id.add_btn);
         btnAdd.setOnClickListener((View v) -> {
-                mResultView.setVisibility(View.INVISIBLE);
-                manageFloatingButtons();
+            manageFloatingButtons();
         });
 
         btnTakephoto.setOnClickListener((View v) -> {
-            CameraX.unbind(previewImage, imageAnalysis);
+            cameraBinding("unbind", new UseCase[]{previewImage, imageAnalysis});
             manageFloatingButtons();
             Intent takePicture = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(takePicture, 0);
         });
 
         btnPickphoto.setOnClickListener((View v) -> {
-            CameraX.unbind(previewImage,imageAnalysis);
+            cameraBinding("unbind", new UseCase[]{previewImage, imageAnalysis});
             manageFloatingButtons();
             Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-            startActivityForResult(pickPhoto , 1);
+            startActivityForResult(pickPhoto, 1);
         });
 
-
-        setupCameraX();
-        CameraX.bindToLifecycle(lifecycleOwner,previewImage);
-
-        final Button btnLive = findViewById(R.id.liveButton);
+        btnLive = findViewById(R.id.liveButton);
         btnLive.setOnClickListener((View v) -> {
-            if(!CameraX.isBound(imageAnalysis) && !CameraX.isBound(previewImage))
-                CameraX.bindToLifecycle(lifecycleOwner,previewImage,imageAnalysis);
-            if (!CameraX.isBound(imageAnalysis)) {
-                //setupCameraX();
-                CameraX.bindToLifecycle(lifecycleOwner,imageAnalysis);
-            }
-
-
+            mImageView.setVisibility(View.INVISIBLE);
+            cameraBinding("bind", new UseCase[]{previewImage, imageAnalysis});
         });
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -184,6 +179,20 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         }
     }
 
+    private void cameraBinding(String operation, UseCase [] uses){
+            for (UseCase aCase : uses)
+                switch (operation){
+                case "bind":
+                    if(!CameraX.isBound(aCase))
+                        CameraX.bindToLifecycle(lifecycleOwner, aCase);
+                    break;
+                case "unbind":
+                    if(CameraX.isBound(aCase))
+                        CameraX.unbind(aCase);
+                    break;
+                }
+    }
+
     private void manageFloatingButtons() {
         clickedAdd = !clickedAdd;
         int visib;
@@ -195,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         btnPickphoto.setVisibility(visib);
         btnBook.setVisibility(visib);
 
-        if(clickedAdd){
+        if (clickedAdd) {
             btnAdd.startAnimation(rotateOpen);
             btnPickphoto.startAnimation(fromBottom);
             btnBook.startAnimation(fromBottom);
@@ -212,15 +221,17 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     //TODO divide the bind and the setup so it can be called again
     //there's a problem with textureview, making it crashing
     private void setupCameraX() {
-        ImageAnalyser imageAnalyser = new ImageAnalyser(mResultView, getApplicationContext());
-        mResultView.setVisibility(View.VISIBLE);
-
-        final TextureView textureView = ((ViewStub) findViewById(R.id.object_detection_texture_view_stub))
+        imageAnalyser = new ImageAnalyser(mResultView, getApplicationContext());
+        //mResultView.setVisibility(View.VISIBLE);
+    /*
+        (ViewStub) findViewById(R.id.object_detection_texture_view_stub))
                 .inflate()
-                .findViewById(R.id.object_detection_texture_view);
+                .
+      */
+        mtextureView = findViewById(R.id.object_detection_texture_view);
         final PreviewConfig previewConfig = new PreviewConfig.Builder().build();
         previewImage = new Preview(previewConfig);
-        previewImage.setOnPreviewOutputUpdateListener(output -> textureView.setSurfaceTexture(output.getSurfaceTexture()));
+        previewImage.setOnPreviewOutputUpdateListener(output -> mtextureView.setSurfaceTexture(output.getSurfaceTexture()));
 
         final ImageAnalysisConfig imageAnalysisConfig =
                 new ImageAnalysisConfig.Builder()
@@ -228,13 +239,15 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                         .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
                         .build();
         //.setCallbackHandler(mBackgroundHandler)
+
         imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
         imageAnalysis.setAnalyzer((image, rotationDegrees) -> {
             if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 500) {
                 return;
             }
 
-            final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(image, rotationDegrees);
+            final ImageAnalyser.AnalysisResult result = imageAnalyser.
+                    analyzeImage(imageAnalyser.imgToBitmap(image.getImage()), 90);
             if (result != null) {
                 mLastAnalysisResultTime = SystemClock.elapsedRealtime();
                 runOnUiThread(() -> applyToUiAnalyzeImageResult(result));
@@ -242,49 +255,36 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         });
 
         lifecycleOwner = this;
-        //CameraX.bindToLifecycle(this, previewAnalysis, imageAnalysis);
+    }
 
+    protected void detect(Bitmap bitmap) {
+        mProgressBar.setVisibility(ProgressBar.VISIBLE);
+        mImageView.setImageBitmap(mBitmap);
+        final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(bitmap, 0);
+        if (result != null)
+            runOnUiThread(() -> applyToUiAnalyzeImageResult(result));
     }
 
     protected void applyToUiAnalyzeImageResult(ImageAnalyser.AnalysisResult result) {
+        mProgressBar.setVisibility(ProgressBar.INVISIBLE);
         mResultView.setResults(result.mResults);
         mResultView.invalidate();
+        mResultView.setVisibility(View.VISIBLE);
     }
 
-    protected void startDetection(){
-        mProgressBar.setVisibility(ProgressBar.VISIBLE);
 
-        mImgScaleX = (float)mBitmap.getWidth() / PrePostProcessor.mInputWidth;
-        mImgScaleY = (float)mBitmap.getHeight() / PrePostProcessor.mInputHeight;
-
-        mIvScaleX = (mBitmap.getWidth() > mBitmap.getHeight() ? (float)mImageView.getWidth() / mBitmap.getWidth() : (float)mImageView.getHeight() / mBitmap.getHeight());
-        mIvScaleY  = (mBitmap.getHeight() > mBitmap.getWidth() ? (float)mImageView.getHeight() / mBitmap.getHeight() : (float)mImageView.getWidth() / mBitmap.getWidth());
-
-        mStartX = (mImageView.getWidth() - mIvScaleX * mBitmap.getWidth())/2;
-        mStartY = (mImageView.getHeight() -  mIvScaleY * mBitmap.getHeight())/2;
-
-        Thread thread = new Thread(MainActivity.this);
-        thread.start();
-    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_CANCELED) {
-            //Replacing liveView with mImageView
             mImageView.setVisibility(View.VISIBLE);
-            switch (requestCode) {
-                case 0:
-                    if (resultCode == RESULT_OK && data != null) {
+            if (resultCode == RESULT_OK && data != null) {
+                switch (requestCode) {
+                    case 0:
                         mBitmap = (Bitmap) data.getExtras().get("data");
-                        Matrix matrix = new Matrix();
-                        //matrix.postRotate(90.0f);
-                        mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
-                        mImageView.setImageBitmap(mBitmap);
-                        startDetection();
-                    }
-                    break;
-                case 1:
-                    if (resultCode == RESULT_OK && data != null) {
+                        detect(mBitmap);
+                        break;
+                    case 1:
                         Uri selectedImage = data.getData();
                         String[] filePathColumn = {MediaStore.Images.Media.DATA};
                         if (selectedImage != null) {
@@ -295,34 +295,14 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                                 String picturePath = cursor.getString(columnIndex);
                                 mBitmap = BitmapFactory.decodeFile(picturePath);
-                                Matrix matrix = new Matrix();
-                                //matrix.postRotate(90.0f);
-                                mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
-                                mImageView.setImageBitmap(mBitmap);
                                 cursor.close();
                             }
                         }
-                        startDetection();
-                    }
-                    break;
+                        break;
+                }
+                detect(mBitmap);
             }
         }
-    }
 
-    @Override
-    public void run() {
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(mBitmap, PrePostProcessor.mInputWidth, PrePostProcessor.mInputHeight, true);
-        final Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(resizedBitmap, PrePostProcessor.NO_MEAN_RGB, PrePostProcessor.NO_STD_RGB);
-        IValue[] outputTuple = mModule.forward(IValue.from(inputTensor)).toTuple();
-        final Tensor outputTensor = outputTuple[0].toTensor();
-        final float[] outputs = outputTensor.getDataAsFloatArray();
-        final ArrayList<Result> results =  PrePostProcessor.outputsToNMSPredictions(outputs, mImgScaleX, mImgScaleY, mIvScaleX, mIvScaleY, mStartX, mStartY);
-
-        runOnUiThread(() -> {
-            mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-            mResultView.setResults(results);
-            mResultView.invalidate();
-            mResultView.setVisibility(View.VISIBLE);
-        });
     }
 }

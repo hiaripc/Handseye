@@ -42,7 +42,7 @@ public class ImageAnalyser {
             mResults = results;
         }
     }
-    private Bitmap imgToBitmap(Image image) {
+    protected Bitmap imgToBitmap(Image image) {
         Image.Plane[] planes = image.getPlanes();
         ByteBuffer yBuffer = planes[0].getBuffer();
         ByteBuffer uBuffer = planes[1].getBuffer();
@@ -68,7 +68,7 @@ public class ImageAnalyser {
 
     //Captures the images, analyse it with PrePostProcessor data, then draws on it and returns the results.
     @Nullable
-    protected ImageAnalyser.AnalysisResult analyzeImage(ImageProxy image, int rotationDegrees) {
+    protected ImageAnalyser.AnalysisResult analyzeImage(Bitmap bitmap, int rotationDegrees) {
         try {
             if (mModule == null) {
                 mModule = LiteModuleLoader.load(MainActivity.assetFilePath(appContext, "fine-tuned.torchscript.ptl"));
@@ -77,11 +77,11 @@ public class ImageAnalyser {
             Log.e("Object Detection", "Error reading assets", e);
             return null;
         }
-        Bitmap bitmap = imgToBitmap(image.getImage());
+        //bitmap = imgToBitmap(image.getImage());
         //if (foto)
             //unbind
         Matrix matrix = new Matrix();
-        matrix.postRotate(90.0f);
+        matrix.postRotate(rotationDegrees);
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, PrePostProcessor.mInputWidth, PrePostProcessor.mInputHeight, true);
 

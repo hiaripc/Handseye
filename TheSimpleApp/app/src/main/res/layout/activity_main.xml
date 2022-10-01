@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#673AB7"
+    android:background="@color/colorPrimary"
     tools:context="org.pytorch.demo.handseye.MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -15,25 +15,35 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-        <!--
-        ViewStub: no dimension, it's just a flag used for view,
-        it will be replaced with the texture_view at run time.
-        It's actually covering the texture view. (Solved: the order counts....)
 
-        -->
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="0dp"
-            android:background="#FFFFFF"
+            android:background="@color/colorPrimary"
             android:contentDescription="@string/image_view"
             android:visibility="invisible" />
+        <!--
+        ViewStub: no dimension, it's just a flag used for view,
+        it will be replaced with the texture_view at run time.
+        It's actually covering the texture view. (Solved: the order counts....)
+
 
         <ViewStub
             android:id="@+id/object_detection_texture_view_stub"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout="@layout/texture_view"
+            app:layout_constraintBottom_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+        -->
+        <TextureView
+            android:id="@+id/object_detection_texture_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/texture_view"
             android:layout="@layout/texture_view"
             app:layout_constraintBottom_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -63,30 +73,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/liveButton"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
-        android:text="@string/live"
-        android:textAllCaps="false"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="56dp"
+        android:backgroundTint="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textView" />
+        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="8dp"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/liveButton"
         app:layout_constraintEnd_toEndOf="@+id/liveButton"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/liveButton" />
-
-    <!-- TODO extended floating button:
-    take photo, choose photo and show hands guideline-->
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_btn"
@@ -94,10 +102,10 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
+        android:backgroundTint="@color/colorAccent"
         android:clickable="true"
         android:focusable="true"
         android:tint="@android:color/white"
-        android:backgroundTint="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_add" />
@@ -131,9 +139,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:visibility="visible"
         android:clickable="true"
         android:focusable="true"
+        android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/pickphoto_btn"
         app:layout_constraintEnd_toEndOf="@+id/pickphoto_btn"
         app:srcCompat="@drawable/ic_takephoto" />
