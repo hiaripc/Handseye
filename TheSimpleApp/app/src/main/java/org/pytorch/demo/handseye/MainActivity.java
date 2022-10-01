@@ -168,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
             cameraBinding("bind", new UseCase[]{previewImage, imageAnalysis});
         });
 
+        //TODO riguardare un po' dove attiva e no sta progress bar, si può anche levare tbh
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         try {
@@ -261,10 +262,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    protected void detect(Bitmap bitmap) {
+    protected void detect(Bitmap bitmap, int rotationDegrees) {
         mProgressBar.setVisibility(ProgressBar.VISIBLE);
         mImageView.setImageBitmap(mBitmap);
-        final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(bitmap, 0);
+        final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(bitmap, rotationDegrees);
         if (result != null)
             runOnUiThread(() -> applyToUiAnalyzeImageResult(result));
     }
@@ -282,11 +283,12 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_CANCELED) {
             mImageView.setVisibility(View.VISIBLE);
+            int rotationDegrees = 0;
             if (resultCode == RESULT_OK && data != null) {
                 switch (requestCode) {
                     case 0:
                         mBitmap = (Bitmap) data.getExtras().get("data");
-                        detect(mBitmap);
+                        rotationDegrees = 0;
                         break;
                     case 1:
                         Uri selectedImage = data.getData();
@@ -299,12 +301,13 @@ public class MainActivity extends AppCompatActivity {
                                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                                 String picturePath = cursor.getString(columnIndex);
                                 mBitmap = BitmapFactory.decodeFile(picturePath);
+                                rotationDegrees = 90;
                                 cursor.close();
                             }
                         }
                         break;
                 }
-                detect(mBitmap);
+                detect(mBitmap, rotationDegrees);
             }
         }
 
