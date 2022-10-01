@@ -154,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
             manageFloatingButtons();
             cameraBinding("unbind", new UseCase[]{previewImage, imageAnalysis});
             mImageView.setVisibility(View.VISIBLE);
+            mResultView.setVisibility(View.INVISIBLE);
             try {
                 mImageView.setImageBitmap(BitmapFactory.decodeFile(assetFilePath(getApplicationContext(),"book.jpg")));
             } catch (IOException e) {
