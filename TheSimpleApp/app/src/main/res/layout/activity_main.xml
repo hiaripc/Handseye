@@ -7,6 +7,7 @@
     android:background="@color/colorPrimary"
     tools:context="org.pytorch.demo.handseye.MainActivity">
 
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
         android:layout_width="386dp"
@@ -25,14 +26,16 @@
             android:contentDescription="@string/image_view"
             android:visibility="invisible" />
 
-        <TextureView
-            android:id="@+id/object_detection_texture_view"
+        <!-- android:id=@+id/object_detection_texture_view -->
+        <androidx.camera.view.PreviewView
+            android:id="@+id/previewView"
+            android:contentDescription="Preview View"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="@string/texture_view"
             app:layout_constraintBottom_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="visible"/>
 
         <org.pytorch.demo.handseye.ResultView
             android:id="@+id/resultView"
@@ -41,7 +44,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="visible"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

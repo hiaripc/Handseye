@@ -1,0 +1,325 @@
+// Copyright (c) 2020 Facebook, Inc. and its affiliates.
+// All rights reserved.
+//
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree.
+package org.pytorch.demo.handseye
+
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Log
+import android.util.Size
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
+import android.widget.ImageView
+import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.*
+import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.common.util.concurrent.ListenableFuture
+import org.pytorch.LiteModuleLoader
+import org.pytorch.Module
+import org.pytorch.demo.handseye.databinding.ActivityMainBinding
+import java.io.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
+class MainActivity : AppCompatActivity() {
+    private lateinit var viewBinding: ActivityMainBinding
+
+    private var preview: Preview? = null
+    private var imageCapture: ImageCapture? = null
+    private var imageAnalysis: ImageAnalysis? = null
+    private var objectAnalyser: MyAnalyser? = null
+    private lateinit var cameraExecutor: ExecutorService
+    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+    private var cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+    private var mImageView: ImageView? = null
+    private var mResultView: ResultView? = null
+    private var mPreviewView: PreviewView? = null
+    private var mProgressBar: ProgressBar? = null
+    private var mBitmap: Bitmap? = null
+    private var mModule: Module? = null
+
+    //Floating buttons
+    private var rotateOpen: Animation? = null
+    private var rotateClose: Animation? = null
+    private var fromBottom: Animation? = null
+    private var toBottom: Animation? = null
+    private lateinit var btnPickphoto: FloatingActionButton
+    private lateinit var btnTakephoto: FloatingActionButton
+    private lateinit var btnBook: FloatingActionButton
+    private lateinit var btnAdd: FloatingActionButton
+    private lateinit var btnLive: FloatingActionButton
+    private var clickedAdd = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                1
+            )
+        }
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 1)
+        }
+
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
+
+        setupModernCamera()
+
+        rotateOpen = AnimationUtils.loadAnimation(this, R.anim.rotate_open_anim)
+        rotateClose = AnimationUtils.loadAnimation(this, R.anim.rotation_close_anim)
+        fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom_anim)
+        toBottom = AnimationUtils.loadAnimation(this, R.anim.to_bottom_anim)
+        mImageView = viewBinding.imageView
+        mImageView!!.visibility = View.INVISIBLE
+        mResultView = viewBinding.resultView
+        mResultView!!.visibility = View.VISIBLE
+        mPreviewView = viewBinding.previewView
+        mPreviewView!!.visibility = View.VISIBLE
+        btnPickphoto = viewBinding.pickphotoBtn
+        btnTakephoto = viewBinding.takephotoBtn
+        btnBook = viewBinding.bookBtn
+
+        btnAdd = viewBinding.addBtn
+        btnAdd.setOnClickListener { manageFloatingButtons() }
+        btnTakephoto.setOnClickListener {
+            mImageView!!.visibility = View.VISIBLE
+            mPreviewView!!.visibility = View.INVISIBLE
+            mResultView!!.visibility = View.VISIBLE
+            cameraProviderFuture.get().unbindAll()
+            manageFloatingButtons()
+            val takePicture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            startActivityForResult(takePicture, 0)
+        }
+        btnPickphoto.setOnClickListener {
+            cameraProviderFuture.get().unbindAll()
+            manageFloatingButtons()
+            val pickPhoto = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+            startActivityForResult(pickPhoto, 1)
+        }
+        btnBook.setOnClickListener {
+            manageFloatingButtons()
+            cameraProviderFuture.get().unbindAll()
+            mImageView!!.visibility = View.VISIBLE
+            mPreviewView!!.visibility = View.INVISIBLE
+            mResultView!!.visibility = View.INVISIBLE
+            try {
+                mImageView!!.setImageBitmap(
+                    BitmapFactory.decodeFile(
+                        assetFilePath(
+                            applicationContext,
+                            "book.jpg"
+                        )
+                    )
+                )
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+        btnLive = viewBinding.liveButton
+        btnLive.setOnClickListener {
+            mImageView!!.visibility = View.INVISIBLE
+            mPreviewView!!.visibility = View.VISIBLE
+            cameraProviderFuture.get().unbindAll()
+            cameraProviderFuture.get().bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
+        }
+
+        //TODO riguardare un po' dove attiva e no sta progress bar, si può anche levare tbh
+        mProgressBar = findViewById<View>(R.id.progressBar) as ProgressBar?
+        try {
+            mModule = LiteModuleLoader.load(
+                assetFilePath(
+                    applicationContext,
+                    "fine-tuned.torchscript.ptl"
+                )
+            )
+            val br = BufferedReader(InputStreamReader(assets.open("alphabet.txt")))
+            var line: String?
+            val classes: MutableList<String?> = ArrayList()
+            while (br.readLine().also { line = it } != null) {
+                classes.add(line)
+                }
+            PrePostProcessor.mClasses = classes.toTypedArray()
+        } catch (e: IOException) {
+            Log.e("Object Detection", "Error reading assets", e)
+            finish()
+        }
+    }
+
+    private fun manageFloatingButtons() {
+        clickedAdd = !clickedAdd
+        val visib: Int = if (clickedAdd) View.VISIBLE else View.INVISIBLE
+        btnTakephoto.visibility = visib
+        btnPickphoto.visibility = visib
+        btnBook.visibility = visib
+        if (clickedAdd) {
+            btnAdd.startAnimation(rotateOpen)
+            btnPickphoto.startAnimation(fromBottom)
+            btnBook.startAnimation(fromBottom)
+            btnTakephoto.startAnimation(fromBottom)
+        } else {
+            btnAdd.startAnimation(rotateClose)
+            btnTakephoto.startAnimation(toBottom)
+            btnTakephoto.startAnimation(toBottom)
+            btnTakephoto.startAnimation(toBottom)
+        }
+    }
+
+
+    private fun setupModernCamera() {
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            // Used to bind the lifecycle of cameras to the lifecycle owner
+            val provider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            // Preview
+            preview = Preview.Builder()
+                //.setTargetResolution(Size(480,640))
+                .build()
+                .also {
+                    it.setSurfaceProvider(viewBinding.previewView.surfaceProvider)
+                }
+
+            // capture code
+            imageCapture = ImageCapture.Builder().build()
+
+            // analyze code
+            imageAnalysis = ImageAnalysis.Builder().setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
+                .setTargetResolution(Size(480,640))
+                .build()
+                .also {
+                    it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView!!) { results ->
+                        if (results.size > 0) Log.d("Result:", results[0].classIndex.toString() + " " + results[0].score)
+                        runOnUiThread { applyToUiAnalyzeImage(results) }
+                    })
+                }
+
+            // Select back camera as a default
+            // For debug purposes, front camera is easier to test
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                // Unbind use cases before rebinding
+                provider.unbindAll()
+                // Bind use cases to camera
+                provider.bindToLifecycle(this, cameraSelector, preview)
+            } catch(exc: Exception) {
+                Log.e(TAG, "Use case binding failed", exc)
+            }
+
+        }, ContextCompat.getMainExecutor(this))
+
+    }
+
+    private fun detect(bitmap: Bitmap?, rotationDegrees: Int) {
+        mProgressBar?.visibility = ProgressBar.VISIBLE
+        mImageView!!.setImageBitmap(mBitmap)
+        val results = objectAnalyser?.analyzeImage(bitmap!!, rotationDegrees)
+        if (results != null) runOnUiThread { applyToUiAnalyzeImage(results) }
+    }
+
+    private fun applyToUiAnalyzeImage(results: ArrayList<Result>) {
+        //Log.d("Detect:", result.get(0).toString())
+        mProgressBar?.visibility = ProgressBar.INVISIBLE
+        mResultView!!.setResults(results)
+        mResultView!!.invalidate()
+        mResultView!!.visibility = View.VISIBLE
+    }
+
+    // TODO when all the important features are finished, this could be updated in a non-deprecated way
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode != Activity.RESULT_CANCELED) {
+            mImageView!!.visibility = View.VISIBLE
+            var rotationDegrees = 0
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                when (requestCode) {
+                    0 -> {
+                        mBitmap = data.extras?.get("data") as Bitmap
+                        rotationDegrees = 0
+                    }
+                    1 -> {
+                        val selectedImage: Uri? = data.data
+                        val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
+                        if (selectedImage != null) {
+                            val cursor: Cursor? = contentResolver.query(
+                                selectedImage,
+                                filePathColumn, null, null, null
+                            )
+                            if (cursor != null) {
+                                cursor.moveToFirst()
+                                val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+                                val picturePath = cursor.getString(columnIndex)
+                                mBitmap = BitmapFactory.decodeFile(picturePath)
+                                rotationDegrees = 90
+                                cursor.close()
+                            }
+                        }
+                    }
+                }
+                detect(mBitmap, rotationDegrees)
+            }
+        }
+    }
+
+    companion object {
+        private const val TAG = "Handseye-kotlin"
+        @JvmStatic
+        @Throws(IOException::class)
+        fun assetFilePath(context: Context, assetName: String?): String {
+            val file = File(context.filesDir, assetName)
+            if (file.exists() && file.length() > 0) {
+                return file.absolutePath
+            }
+            context.assets.open(assetName!!).use { `is` ->
+                FileOutputStream(file).use { os ->
+                    val buffer = ByteArray(4 * 1024)
+                    var read: Int
+                    while (`is`.read(buffer).also { read = it } != -1) {
+                        os.write(buffer, 0, read)
+                    }
+                    os.flush()
+                }
+                return file.absolutePath
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
+    }
+}
