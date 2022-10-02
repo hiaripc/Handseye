@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.media.Image;
 import android.util.Log;
+import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 import androidx.camera.core.ImageProxy;
@@ -26,12 +27,14 @@ import java.util.ArrayList;
 
 public class ImageAnalyser {
     protected ResultView mResultView;
+    protected ImageView mImageView;
     protected Module mModule;
     protected Context appContext;
 
-    public ImageAnalyser(ResultView mResultView, Context appContext){
+    public ImageAnalyser(ResultView mResultView, ImageView mImageView, Context appContext){
         this.mResultView = mResultView;
         this.appContext = appContext;
+        this.mImageView = mImageView;
         this.mModule = null;
     }
 
@@ -65,24 +68,54 @@ public class ImageAnalyser {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
+    protected Bitmap toMatrixBitmap(Bitmap bitmap, int rotationDegrees){
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotationDegrees);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
 
-    //Captures the images, analyse it with PrePostProcessor data, then draws on it and returns the results.
-    @Nullable
-    protected ImageAnalyser.AnalysisResult analyzeImage(Bitmap bitmap, int rotationDegrees) {
+    }
+
+    protected void loadModule(){
         try {
             if (mModule == null) {
                 mModule = LiteModuleLoader.load(MainActivity.assetFilePath(appContext, "fine-tuned.torchscript.ptl"));
             }
         } catch (IOException e) {
             Log.e("Object Detection", "Error reading assets", e);
-            return null;
         }
-        //bitmap = imgToBitmap(image.getImage());
-        //if (foto)
-            //unbind
-        Matrix matrix = new Matrix();
-        matrix.postRotate(rotationDegrees);
-        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+    //Captures the images, analyse it with PrePostProcessor data, then draws on it and returns the results.
+
+    //From video
+    @Nullable
+    protected ImageAnalyser.AnalysisResult analyzeImage(ImageProxy image, int rotationDegrees) {
+        loadModule();
+
+        Bitmap bitmap = imgToBitmap(image.getImage());
+        bitmap = toMatrixBitmap(bitmap, rotationDegrees);
+
+        float ivScaleX = (float)mResultView.getWidth() / bitmap.getWidth();
+        float ivScaleY = (float)mResultView.getHeight() / bitmap.getHeight();
+
+        return processImage(bitmap, ivScaleX,ivScaleY,0,0);
+    }
+
+    //Overloaded for picture taken/picked, need to calculated StartX/Y and different ivScale
+    protected ImageAnalyser.AnalysisResult analyzeImage(Bitmap matrixBitmap) {
+        loadModule();
+
+        float ivScaleX = (matrixBitmap.getWidth() > matrixBitmap.getHeight() ? (float)mImageView.getWidth() / matrixBitmap.getWidth() : (float)mImageView.getHeight() / matrixBitmap.getHeight());
+        float ivScaleY  = (matrixBitmap.getHeight() > matrixBitmap.getWidth() ? (float)mImageView.getHeight() / matrixBitmap.getHeight() : (float)mImageView.getWidth() / matrixBitmap.getWidth());
+
+        float startX = (mImageView.getWidth() - ivScaleX * matrixBitmap.getWidth())/2;
+        float startY = (mImageView.getHeight() -  ivScaleY * matrixBitmap.getHeight())/2;
+
+        return processImage(matrixBitmap,ivScaleX,ivScaleY,startX,startY);
+    }
+
+    private ImageAnalyser.AnalysisResult processImage(Bitmap bitmap, float ivScaleX, float ivScaleY,float  startX, float startY){
+        float imgScaleX = (float)bitmap.getWidth() / PrePostProcessor.mInputWidth;
+        float imgScaleY = (float)bitmap.getHeight() / PrePostProcessor.mInputHeight;
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, PrePostProcessor.mInputWidth, PrePostProcessor.mInputHeight, true);
 
         final Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(resizedBitmap, PrePostProcessor.NO_MEAN_RGB, PrePostProcessor.NO_STD_RGB);
@@ -90,12 +123,7 @@ public class ImageAnalyser {
         final Tensor outputTensor = outputTuple[0].toTensor();
         final float[] outputs = outputTensor.getDataAsFloatArray();
 
-        float imgScaleX = (float)bitmap.getWidth() / PrePostProcessor.mInputWidth;
-        float imgScaleY = (float)bitmap.getHeight() / PrePostProcessor.mInputHeight;
-        float ivScaleX = (float)mResultView.getWidth() / bitmap.getWidth();
-        float ivScaleY = (float)mResultView.getHeight() / bitmap.getHeight();
-
-        final ArrayList<Result> results = PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, 0, 0);
+        final ArrayList<Result> results = PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, startX,startY);
         return new ImageAnalyser.AnalysisResult(results);
     }
 }

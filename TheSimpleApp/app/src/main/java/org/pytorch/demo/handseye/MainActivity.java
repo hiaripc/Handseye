@@ -60,10 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private ResultView mResultView;
     private TextureView mtextureView;
     private SurfaceTexture mSurfaceTexture;
-    PreviewConfig previewConfig;
+    private PreviewConfig previewConfig;
     private ProgressBar mProgressBar;
-    private Bitmap mBitmap = null;
-    private Module mModule;
     private long mLastAnalysisResultTime;
     private ImageAnalysis imageAnalysis;
     private Preview previewImage;
@@ -102,10 +100,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //TODO andrebbe fatto il metodo di callback dei permessi per non farla crashare a primo avvio
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         }
@@ -173,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         try {
-            mModule = LiteModuleLoader.load(MainActivity.assetFilePath(getApplicationContext(), "fine-tuned.torchscript.ptl"));
             BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("alphabet.txt")));
             String line;
             List<String> classes = new ArrayList<>();
@@ -230,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupCameraX() {
         CameraX.unbindAll();
-        imageAnalyser = new ImageAnalyser(mResultView, getApplicationContext());
+        imageAnalyser = new ImageAnalyser(mResultView, mImageView, getApplicationContext());
         mtextureView = findViewById(R.id.object_detection_texture_view);
 
         previewConfig = new PreviewConfig.Builder().build();
@@ -254,8 +253,8 @@ public class MainActivity extends AppCompatActivity {
             if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 500) {
                 return;
             }
-            final ImageAnalyser.AnalysisResult result = imageAnalyser.
-                    analyzeImage(imageAnalyser.imgToBitmap(image.getImage()), 90);
+
+            final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(image, 90);
             if (result != null) {
                 mLastAnalysisResultTime = SystemClock.elapsedRealtime();
                 runOnUiThread(() -> applyToUiAnalyzeImageResult(result));
@@ -263,13 +262,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    protected void detect(Bitmap bitmap, int rotationDegrees) {
+    protected void detectPhoto(Bitmap mBitmap, int rotationDegrees) {
         mProgressBar.setVisibility(ProgressBar.VISIBLE);
+        mBitmap = imageAnalyser.toMatrixBitmap(mBitmap, rotationDegrees);
         mImageView.setImageBitmap(mBitmap);
-        final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(bitmap, rotationDegrees);
+        final ImageAnalyser.AnalysisResult result = imageAnalyser.analyzeImage(mBitmap);
         if (result != null)
             runOnUiThread(() -> applyToUiAnalyzeImageResult(result));
     }
+
 
     protected void applyToUiAnalyzeImageResult(ImageAnalyser.AnalysisResult result) {
         mProgressBar.setVisibility(ProgressBar.INVISIBLE);
@@ -282,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Bitmap mBitmap = null;
         if (resultCode != RESULT_CANCELED) {
             mImageView.setVisibility(View.VISIBLE);
             int rotationDegrees = 0;
@@ -308,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         break;
                 }
-                detect(mBitmap, rotationDegrees);
+                detectPhoto(mBitmap, rotationDegrees);
             }
         }
 
