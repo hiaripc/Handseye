@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnAdd : FloatingActionButton
     private lateinit var btnLive : FloatingActionButton
     private var clickedAdd = false
+    private var clickedLive = false
 
     private fun checkPermissions(){
         if (ContextCompat.checkSelfPermission(
@@ -149,21 +150,21 @@ class MainActivity : AppCompatActivity() {
         btnAdd.setOnClickListener { manageFloatingButtons() }
         btnTakephoto.setOnClickListener {
             manageFloatingButtons()
-            manageViewPhoto(false)
+            manageViewPhoto(0)
             cameraProviderFuture.get().unbindAll()
             val takePicture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             startActivityForResult(takePicture, 0)
         }
         btnPickphoto.setOnClickListener {
             manageFloatingButtons()
-            manageViewPhoto(false)
+            manageViewPhoto(0)
             cameraProviderFuture.get().unbindAll()
             val pickPhoto = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
             startActivityForResult(pickPhoto, 1)
         }
         btnBook.setOnClickListener {
             manageFloatingButtons()
-            manageViewPhoto(false)
+            manageViewPhoto(0)
             cameraProviderFuture.get().unbindAll()
             try {
                 mImageView.setImageBitmap(
@@ -180,22 +181,37 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnLive.setOnClickListener {
-            manageViewPhoto(true)
+            clickedLive = !clickedLive
+            manageViewPhoto(1)
             cameraProviderFuture.get().unbindAll()
-            cameraProviderFuture.get().bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
+            if (clickedLive) {
+                cameraProviderFuture.get()
+                    .bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
+                mTextView.text = ""
+            } else cameraProviderFuture.get()
+                .bindToLifecycle(this, cameraSelector, preview)
+        }
+
+        mTextView.setOnClickListener {
+            mTextView.text = ""
         }
 
     }
 
-    private fun manageViewPhoto(live: Boolean){
+    private fun manageViewPhoto(case: Int){
         mResultView.visibility = View.INVISIBLE
-        if (live) {
-            mImageView.visibility = View.INVISIBLE
-            mPreviewView.visibility = View.VISIBLE
-        }
-        else {
-            mImageView.visibility = View.VISIBLE
-            mPreviewView.visibility = View.INVISIBLE
+
+        when(case){
+            //Photo
+            0 -> {
+                mImageView.visibility = View.VISIBLE
+                mPreviewView.visibility = View.INVISIBLE
+            }
+            //Camera active
+            1 -> {
+                mImageView.visibility = View.INVISIBLE
+                mPreviewView.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -284,8 +300,9 @@ class MainActivity : AppCompatActivity() {
         mResultView.visibility = View.VISIBLE
 
         for (result: Result in results){
-            Log.d("DETECT ", PrePostProcessor.mClasses[result.classIndex].toString())
-
+            val prediction = PrePostProcessor.mClasses[result.classIndex].toString()
+            Log.d("DETECT ", prediction)
+            mTextView.text = String.format("%s %s", mTextView.text, prediction)
         }
     }
 
