@@ -21,7 +21,7 @@ object PrePostProcessor {
     //private const val mOutputColumn = 85 // left, top, right, bottom, score and 80 class probability
     // mOutputColumn is 31 for our alphabet network
     private const val mOutputColumn = 31 // left, top, right, bottom, score and 26 class probability
-    private const val mThreshold = 0.30f // score above which a detection is generated
+    var mThreshold = 0.30f // score above which a detection is generated
     private const val mNmsLimit = 15
     lateinit var mClasses: Array<String?>
     // The two methods nonMaxSuppression and IOU below are ported from https://github.com/hollance/YOLO-CoreML-MPSNNGraph/blob/master/Common/Helpers.swift

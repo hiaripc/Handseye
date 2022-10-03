@@ -29,23 +29,23 @@
         <!-- android:id=@+id/object_detection_texture_view -->
         <androidx.camera.view.PreviewView
             android:id="@+id/previewView"
-            android:contentDescription="Preview View"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:contentDescription="Preview View"
+            android:visibility="visible"
             app:layout_constraintBottom_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:visibility="visible"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <org.pytorch.demo.handseye.ResultView
             android:id="@+id/resultView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:visibility="invisible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:visibility="invisible"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -107,6 +107,48 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_add" />
 
+    <LinearLayout
+        android:id="@+id/accuracyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="190dp"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textView">
+
+        <TextView
+            android:id="@+id/accuracyText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="0.30"
+            android:textAllCaps="true"
+            android:textColor="@color/colorAccent"
+            android:textSize="20sp"
+
+            android:textStyle="bold|italic"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <SeekBar
+            android:id="@+id/accuracyBar"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="352dp"
+            android:layout_height="15dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:max="100"
+            android:progress="30"
+            android:visibility="visible" />
+
+
+    </LinearLayout>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/book_btn"
         android:layout_width="wrap_content"
@@ -142,5 +184,6 @@
         app:layout_constraintBottom_toTopOf="@+id/pickphoto_btn"
         app:layout_constraintEnd_toEndOf="@+id/pickphoto_btn"
         app:srcCompat="@drawable/ic_takephoto" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

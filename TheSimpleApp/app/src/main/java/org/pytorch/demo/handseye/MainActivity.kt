@@ -21,8 +21,12 @@ import android.util.Size
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.AbsSeekBar
+import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -47,6 +51,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mResultView : ResultView
     private lateinit var mPreviewView : PreviewView
     private lateinit var mProgressBar :ProgressBar
+    private lateinit var mAccuracyBar: SeekBar
+    private lateinit var mAccuracyLayout: LinearLayout
+    private lateinit var mAccuracyTextView: TextView
 
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
@@ -69,6 +76,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnLive : FloatingActionButton
     private var clickedAdd = false
     private var clickedLive = false
+    private var clickedBook = false
 
     private fun checkPermissions(){
         if (ContextCompat.checkSelfPermission(
@@ -118,6 +126,9 @@ class MainActivity : AppCompatActivity() {
         mResultView = viewBinding.resultView
         mPreviewView = viewBinding.previewView
         mProgressBar = viewBinding.progressBar
+        mAccuracyBar = viewBinding.accuracyBar
+        mAccuracyLayout = viewBinding.accuracyLayout
+        mAccuracyTextView = viewBinding.accuracyText
         btnPickphoto = viewBinding.pickphotoBtn
         btnTakephoto = viewBinding.takephotoBtn
         btnBook = viewBinding.bookBtn
@@ -127,6 +138,7 @@ class MainActivity : AppCompatActivity() {
         rotateClose  = AnimationUtils.loadAnimation(this, R.anim.rotation_close_anim)
         fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom_anim)
         toBottom = AnimationUtils.loadAnimation(this, R.anim.to_bottom_anim)
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -165,6 +177,10 @@ class MainActivity : AppCompatActivity() {
         btnBook.setOnClickListener {
             manageFloatingButtons()
             manageViewPhoto(0)
+            clickedBook = true
+            mAccuracyLayout.visibility = View.VISIBLE
+            mTextView.visibility = View.INVISIBLE
+
             cameraProviderFuture.get().unbindAll()
             try {
                 mImageView.setImageBitmap(
@@ -196,10 +212,29 @@ class MainActivity : AppCompatActivity() {
             mTextView.text = ""
         }
 
+        mAccuracyBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                mAccuracyTextView.text = String.format("%.2f", (p1.toFloat()/100))
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+                if (p0 != null) PrePostProcessor.mThreshold = (p0.progress.toFloat() / 100)
+            }
+
+        })
+
     }
 
     private fun manageViewPhoto(case: Int){
         mResultView.visibility = View.INVISIBLE
+        if(clickedBook) {
+            mAccuracyLayout.visibility = View.INVISIBLE
+            mTextView.visibility = View.VISIBLE
+            clickedBook = false
+        }
 
         when(case){
             //Photo
