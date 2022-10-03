@@ -23,6 +23,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
@@ -40,35 +41,35 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var viewBinding: ActivityMainBinding
+    private lateinit var viewBinding : ActivityMainBinding
+    private lateinit var mTextView : TextView
+    private lateinit var mImageView : ImageView
+    private lateinit var mResultView : ResultView
+    private lateinit var mPreviewView : PreviewView
+    private lateinit var mProgressBar :ProgressBar
 
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
     private var imageAnalysis: ImageAnalysis? = null
     private var objectAnalyser: MyAnalyser? = null
-    private lateinit var cameraExecutor: ExecutorService
+    private lateinit var cameraExecutor : ExecutorService
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private var cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
-    private var mImageView: ImageView? = null
-    private var mResultView: ResultView? = null
-    private var mPreviewView: PreviewView? = null
-    private var mProgressBar: ProgressBar? = null
     private var mModule: Module? = null
 
     //Floating buttons
-    private var rotateOpen: Animation? = null
-    private var rotateClose: Animation? = null
-    private var fromBottom: Animation? = null
-    private var toBottom: Animation? = null
-    private lateinit var btnPickphoto: FloatingActionButton
-    private lateinit var btnTakephoto: FloatingActionButton
-    private lateinit var btnBook: FloatingActionButton
-    private lateinit var btnAdd: FloatingActionButton
-    private lateinit var btnLive: FloatingActionButton
+    private lateinit var rotateOpen : Animation
+    private lateinit var rotateClose  : Animation
+    private lateinit var fromBottom : Animation
+    private lateinit var toBottom : Animation
+    private lateinit var btnPickphoto : FloatingActionButton
+    private lateinit var btnTakephoto : FloatingActionButton
+    private lateinit var btnBook : FloatingActionButton
+    private lateinit var btnAdd : FloatingActionButton
+    private lateinit var btnLive : FloatingActionButton
     private var clickedAdd = false
 
-    fun checkPermissions(){
+    private fun checkPermissions(){
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -89,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun loadAssest(){
+    private fun loadAsset(){
         try {
             mModule = LiteModuleLoader.load(
                 assetFilePath(
@@ -110,39 +111,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun bindViewComponents(){
+        mTextView = viewBinding.textView
+        mImageView = viewBinding.imageView
+        mResultView = viewBinding.resultView
+        mPreviewView = viewBinding.previewView
+        mProgressBar = viewBinding.progressBar
+        btnPickphoto = viewBinding.pickphotoBtn
+        btnTakephoto = viewBinding.takephotoBtn
+        btnBook = viewBinding.bookBtn
+        btnAdd = viewBinding.addBtn
+        btnLive = viewBinding.liveButton
+        rotateOpen = AnimationUtils.loadAnimation(this, R.anim.rotate_open_anim)
+        rotateClose  = AnimationUtils.loadAnimation(this, R.anim.rotation_close_anim)
+        fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom_anim)
+        toBottom = AnimationUtils.loadAnimation(this, R.anim.to_bottom_anim)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         //TODO: to not crash on first start, something like that is needed
         //if(!checkPermissions()) checkPermissions
         checkPermissions()
-        loadAssest()
-
+        loadAsset()
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        bindViewComponents()
         setContentView(viewBinding.root)
 
-        rotateOpen = AnimationUtils.loadAnimation(this, R.anim.rotate_open_anim)
-        rotateClose = AnimationUtils.loadAnimation(this, R.anim.rotation_close_anim)
-        fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom_anim)
-        toBottom = AnimationUtils.loadAnimation(this, R.anim.to_bottom_anim)
-        mImageView = viewBinding.imageView
-        mImageView!!.visibility = View.INVISIBLE
-        mResultView = viewBinding.resultView
-        mResultView!!.visibility = View.INVISIBLE
-        mPreviewView = viewBinding.previewView
-        mPreviewView!!.visibility = View.VISIBLE
-        btnPickphoto = viewBinding.pickphotoBtn
-        btnTakephoto = viewBinding.takephotoBtn
-        btnBook = viewBinding.bookBtn
+        objectAnalyser = MyAnalyser(mModule!!,mResultView,mImageView, null)
 
-        objectAnalyser = MyAnalyser(mModule!!,mResultView!!,mImageView!!, null)
-
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraExecutor = Executors.newSingleThreadExecutor()
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
         setupModernCamera()
 
-
-        btnAdd = viewBinding.addBtn
         btnAdd.setOnClickListener { manageFloatingButtons() }
         btnTakephoto.setOnClickListener {
             manageFloatingButtons()
@@ -163,7 +166,7 @@ class MainActivity : AppCompatActivity() {
             manageViewPhoto(false)
             cameraProviderFuture.get().unbindAll()
             try {
-                mImageView!!.setImageBitmap(
+                mImageView.setImageBitmap(
                     BitmapFactory.decodeFile(
                         assetFilePath(
                             applicationContext,
@@ -175,27 +178,24 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }
-        btnLive = viewBinding.liveButton
+
         btnLive.setOnClickListener {
             manageViewPhoto(true)
             cameraProviderFuture.get().unbindAll()
             cameraProviderFuture.get().bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
         }
 
-        //TODO riguardare un po' dove attiva e no sta progress bar, si può anche levare tbh
-        mProgressBar = findViewById<View>(R.id.progressBar) as ProgressBar?
-
     }
 
     private fun manageViewPhoto(live: Boolean){
-        mResultView!!.visibility = View.INVISIBLE
+        mResultView.visibility = View.INVISIBLE
         if (live) {
-            mImageView!!.visibility = View.INVISIBLE
-            mPreviewView!!.visibility = View.VISIBLE
+            mImageView.visibility = View.INVISIBLE
+            mPreviewView.visibility = View.VISIBLE
         }
         else {
-            mImageView!!.visibility = View.VISIBLE
-            mPreviewView!!.visibility = View.INVISIBLE
+            mImageView.visibility = View.VISIBLE
+            mPreviewView.visibility = View.INVISIBLE
         }
     }
 
@@ -240,7 +240,7 @@ class MainActivity : AppCompatActivity() {
                 .setTargetResolution(Size(480,640))
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView!!, mImageView!!) { results ->
+                    it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView, mImageView) { results ->
                         if (results.size > 0) Log.d("Result:", results[0].classIndex.toString() + " " + results[0].score)
                         runOnUiThread { applyToUiAnalyzeImage(results) }
                     })
@@ -264,10 +264,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun detect(bitmap: Bitmap?, rotationDegrees: Int) {
-        mProgressBar?.visibility = ProgressBar.VISIBLE
+        mProgressBar.visibility = ProgressBar.VISIBLE
 
         val rotatedBitmap = objectAnalyser?.rotateBitmap(bitmap!!, rotationDegrees)
-        mImageView!!.setImageBitmap(rotatedBitmap)
+        mImageView.setImageBitmap(rotatedBitmap)
 
         val results = objectAnalyser?.analyzeImage(bitmap!!)
         if (results != null) runOnUiThread { applyToUiAnalyzeImage(results) }
@@ -275,14 +275,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyToUiAnalyzeImage(results: ArrayList<Result>) {
         Log.d("DETECT ", "applying")
+
+        if (results.isEmpty()) Log.e("DETECT ", "No results.")
+
+        mProgressBar.visibility = ProgressBar.INVISIBLE
+        mResultView.setResults(results)
+        mResultView.invalidate()
+        mResultView.visibility = View.VISIBLE
+
         for (result: Result in results){
             Log.d("DETECT ", PrePostProcessor.mClasses[result.classIndex].toString())
+
         }
-        if (results.isEmpty()) Log.e("DETECT ", "No results.")
-        mProgressBar?.visibility = ProgressBar.INVISIBLE
-        mResultView!!.setResults(results)
-        mResultView!!.invalidate()
-        mResultView!!.visibility = View.VISIBLE
     }
 
     // TODO when all the important features are finished, this could be updated in a non-deprecated way
@@ -291,7 +295,7 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != Activity.RESULT_CANCELED) {
             var rotationDegrees = 0
-            var mBitmap : Bitmap? = null;
+            var mBitmap : Bitmap? = null
             if (resultCode == Activity.RESULT_OK && data != null) {
                 when (requestCode) {
                     0 -> {
@@ -327,12 +331,12 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "Handseye-kotlin"
         @JvmStatic
         @Throws(IOException::class)
-        fun assetFilePath(context: Context, assetName: String?): String {
+        fun assetFilePath(context: Context, assetName: String): String {
             val file = File(context.filesDir, assetName)
             if (file.exists() && file.length() > 0) {
                 return file.absolutePath
             }
-            context.assets.open(assetName!!).use { `is` ->
+            context.assets.open(assetName).use { `is` ->
                 FileOutputStream(file).use { os ->
                     val buffer = ByteArray(4 * 1024)
                     var read: Int
