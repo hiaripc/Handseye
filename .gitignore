@@ -1,6 +1,16 @@
 TheApp/local.properties
+*.apk
+
+# Log/OS Files
+*.log
+
+# Android Studio generated files and folders
 .gradle
-TheApp/.gradle
-TheSimpleApp/.gradle
-TheSimpleApp/app/build/outputs/apk/debug/app-debug.apk
-TheApp/app/build/outputs/apk/debug/app-debug.apk
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+output.json
+*.iml
+.idea
+DS_Store
