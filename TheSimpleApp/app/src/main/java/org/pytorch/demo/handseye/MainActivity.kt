@@ -54,7 +54,6 @@ class MainActivity : AppCompatActivity() {
     private var mResultView: ResultView? = null
     private var mPreviewView: PreviewView? = null
     private var mProgressBar: ProgressBar? = null
-    private var mBitmap: Bitmap? = null
     private var mModule: Module? = null
 
     //Floating buttons
@@ -69,8 +68,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnLive: FloatingActionButton
     private var clickedAdd = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    fun checkPermissions(){
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -89,14 +87,39 @@ class MainActivity : AppCompatActivity() {
         ) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 1)
         }
+    }
 
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraExecutor = Executors.newSingleThreadExecutor()
+    fun loadAssest(){
+        try {
+            mModule = LiteModuleLoader.load(
+                assetFilePath(
+                    applicationContext,
+                    "fine-tuned.torchscript.ptl"
+                )
+            )
+            val br = BufferedReader(InputStreamReader(assets.open("alphabet.txt")))
+            var line: String?
+            val classes: MutableList<String?> = ArrayList()
+            while (br.readLine().also { line = it } != null) {
+                classes.add(line)
+            }
+            PrePostProcessor.mClasses = classes.toTypedArray()
+        } catch (e: IOException) {
+            Log.e("Object Detection", "Error reading assets", e)
+            finish()
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        //TODO: to not crash on first start, something like that is needed
+        //if(!checkPermissions()) checkPermissions
+        checkPermissions()
+        loadAssest()
 
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-
-        setupModernCamera()
 
         rotateOpen = AnimationUtils.loadAnimation(this, R.anim.rotate_open_anim)
         rotateClose = AnimationUtils.loadAnimation(this, R.anim.rotation_close_anim)
@@ -105,36 +128,40 @@ class MainActivity : AppCompatActivity() {
         mImageView = viewBinding.imageView
         mImageView!!.visibility = View.INVISIBLE
         mResultView = viewBinding.resultView
-        mResultView!!.visibility = View.VISIBLE
+        mResultView!!.visibility = View.INVISIBLE
         mPreviewView = viewBinding.previewView
         mPreviewView!!.visibility = View.VISIBLE
         btnPickphoto = viewBinding.pickphotoBtn
         btnTakephoto = viewBinding.takephotoBtn
         btnBook = viewBinding.bookBtn
 
+        objectAnalyser = MyAnalyser(mModule!!,mResultView!!,mImageView!!, null)
+
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        setupModernCamera()
+
+
         btnAdd = viewBinding.addBtn
         btnAdd.setOnClickListener { manageFloatingButtons() }
         btnTakephoto.setOnClickListener {
-            mImageView!!.visibility = View.VISIBLE
-            mPreviewView!!.visibility = View.INVISIBLE
-            mResultView!!.visibility = View.VISIBLE
-            cameraProviderFuture.get().unbindAll()
             manageFloatingButtons()
+            manageViewPhoto(false)
+            cameraProviderFuture.get().unbindAll()
             val takePicture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             startActivityForResult(takePicture, 0)
         }
         btnPickphoto.setOnClickListener {
-            cameraProviderFuture.get().unbindAll()
             manageFloatingButtons()
+            manageViewPhoto(false)
+            cameraProviderFuture.get().unbindAll()
             val pickPhoto = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
             startActivityForResult(pickPhoto, 1)
         }
         btnBook.setOnClickListener {
             manageFloatingButtons()
+            manageViewPhoto(false)
             cameraProviderFuture.get().unbindAll()
-            mImageView!!.visibility = View.VISIBLE
-            mPreviewView!!.visibility = View.INVISIBLE
-            mResultView!!.visibility = View.INVISIBLE
             try {
                 mImageView!!.setImageBitmap(
                     BitmapFactory.decodeFile(
@@ -150,31 +177,25 @@ class MainActivity : AppCompatActivity() {
         }
         btnLive = viewBinding.liveButton
         btnLive.setOnClickListener {
-            mImageView!!.visibility = View.INVISIBLE
-            mPreviewView!!.visibility = View.VISIBLE
+            manageViewPhoto(true)
             cameraProviderFuture.get().unbindAll()
             cameraProviderFuture.get().bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
         }
 
         //TODO riguardare un po' dove attiva e no sta progress bar, si può anche levare tbh
         mProgressBar = findViewById<View>(R.id.progressBar) as ProgressBar?
-        try {
-            mModule = LiteModuleLoader.load(
-                assetFilePath(
-                    applicationContext,
-                    "fine-tuned.torchscript.ptl"
-                )
-            )
-            val br = BufferedReader(InputStreamReader(assets.open("alphabet.txt")))
-            var line: String?
-            val classes: MutableList<String?> = ArrayList()
-            while (br.readLine().also { line = it } != null) {
-                classes.add(line)
-                }
-            PrePostProcessor.mClasses = classes.toTypedArray()
-        } catch (e: IOException) {
-            Log.e("Object Detection", "Error reading assets", e)
-            finish()
+
+    }
+
+    private fun manageViewPhoto(live: Boolean){
+        mResultView!!.visibility = View.INVISIBLE
+        if (live) {
+            mImageView!!.visibility = View.INVISIBLE
+            mPreviewView!!.visibility = View.VISIBLE
+        }
+        else {
+            mImageView!!.visibility = View.VISIBLE
+            mPreviewView!!.visibility = View.INVISIBLE
         }
     }
 
@@ -196,7 +217,6 @@ class MainActivity : AppCompatActivity() {
             btnTakephoto.startAnimation(toBottom)
         }
     }
-
 
     private fun setupModernCamera() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -220,7 +240,7 @@ class MainActivity : AppCompatActivity() {
                 .setTargetResolution(Size(480,640))
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView!!) { results ->
+                    it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView!!, mImageView!!) { results ->
                         if (results.size > 0) Log.d("Result:", results[0].classIndex.toString() + " " + results[0].score)
                         runOnUiThread { applyToUiAnalyzeImage(results) }
                     })
@@ -245,13 +265,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun detect(bitmap: Bitmap?, rotationDegrees: Int) {
         mProgressBar?.visibility = ProgressBar.VISIBLE
-        mImageView!!.setImageBitmap(mBitmap)
-        val results = objectAnalyser?.analyzeImage(bitmap!!, rotationDegrees)
+
+        val rotatedBitmap = objectAnalyser?.rotateBitmap(bitmap!!, rotationDegrees)
+        mImageView!!.setImageBitmap(rotatedBitmap)
+
+        val results = objectAnalyser?.analyzeImage(bitmap!!)
         if (results != null) runOnUiThread { applyToUiAnalyzeImage(results) }
     }
 
     private fun applyToUiAnalyzeImage(results: ArrayList<Result>) {
-        //Log.d("Detect:", result.get(0).toString())
+        Log.d("DETECT ", "applying")
+        for (result: Result in results){
+            Log.d("DETECT ", PrePostProcessor.mClasses[result.classIndex].toString())
+        }
+        if (results.isEmpty()) Log.e("DETECT ", "No results.")
         mProgressBar?.visibility = ProgressBar.INVISIBLE
         mResultView!!.setResults(results)
         mResultView!!.invalidate()
@@ -263,8 +290,8 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != Activity.RESULT_CANCELED) {
-            mImageView!!.visibility = View.VISIBLE
             var rotationDegrees = 0
+            var mBitmap : Bitmap? = null;
             if (resultCode == Activity.RESULT_OK && data != null) {
                 when (requestCode) {
                     0 -> {
@@ -284,12 +311,13 @@ class MainActivity : AppCompatActivity() {
                                 val columnIndex = cursor.getColumnIndex(filePathColumn[0])
                                 val picturePath = cursor.getString(columnIndex)
                                 mBitmap = BitmapFactory.decodeFile(picturePath)
-                                rotationDegrees = 90
+                                rotationDegrees = 0
                                 cursor.close()
                             }
                         }
                     }
                 }
+                //mImageView!!.setImageBitmap(mBitmap)
                 detect(mBitmap, rotationDegrees)
             }
         }

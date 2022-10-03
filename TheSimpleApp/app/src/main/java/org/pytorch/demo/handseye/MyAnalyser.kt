@@ -3,6 +3,7 @@ package org.pytorch.demo.handseye
 import android.annotation.SuppressLint
 import android.graphics.*
 import android.media.Image
+import android.widget.ImageView
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import org.pytorch.IValue
@@ -10,14 +11,15 @@ import org.pytorch.Module
 import org.pytorch.torchvision.TensorImageUtils
 import java.io.ByteArrayOutputStream
 
+
 typealias ObjectListener = (results: ArrayList<Result>) -> Unit
 
-class MyAnalyser(val mModule: Module, val mResultView: ResultView, private val listener: ObjectListener) : ImageAnalysis.Analyzer {
+class MyAnalyser(val mModule: Module, val mResultView: ResultView, val mImageView: ImageView, private val listener: ObjectListener?) : ImageAnalysis.Analyzer {
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
-        val results = analyzeImage(image.image!!.imgToBitmap(), 90)
-        listener(results)
+        val results = analyzeImage(image, 90)
+        listener!!(results)
         image.close()
     }
 
@@ -39,15 +41,54 @@ class MyAnalyser(val mModule: Module, val mResultView: ResultView, private val l
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
-    @SuppressLint("UnsafeOptInUsageError")
-    fun analyzeImage(bitmap: Bitmap, rotationDegrees: Int): ArrayList<Result> {
-        //bitmap = imgToBitmap(image.getImage());
-        //if (foto)
-        //unbind
+    fun rotateBitmap(bitmap: Bitmap, rotationDegrees: Int): Bitmap {
         val matrix = Matrix()
         matrix.postRotate(rotationDegrees.toFloat())
-        val rotatedBitmap =
-            Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true)
+
+        return Bitmap.createBitmap(
+            bitmap,
+            0,
+            0,
+            bitmap.width,
+            bitmap.height,
+            matrix,
+            true
+        )
+    }
+
+    //Overloaded for picture taken/picked, need to calculated StartX/Y and different ivScale
+
+    @SuppressLint("UnsafeOptInUsageError")
+    fun analyzeImage(image: ImageProxy, rotationDegrees: Int): ArrayList<Result> {
+        val bitmap = image.image!!.imgToBitmap()
+        val rotatedBitmap = rotateBitmap(bitmap, rotationDegrees)
+
+        val ivScaleX: Float = mResultView.width.toFloat() / rotatedBitmap.width
+        val ivScaleY: Float = mResultView.height.toFloat() / rotatedBitmap.height
+
+        return processImage(rotatedBitmap,ivScaleX,ivScaleY,0f,0f)
+    }
+
+    //Picked/taken photo
+    fun analyzeImage(rotatedBitmap: Bitmap): ArrayList<Result> {
+        val ivScaleX =
+            if (rotatedBitmap.width > rotatedBitmap.height)
+                mImageView.width.toFloat() / rotatedBitmap.width
+            else mImageView.height.toFloat() / rotatedBitmap.height
+        val ivScaleY =
+            if (rotatedBitmap.height > rotatedBitmap.width)
+                mImageView.height.toFloat() / rotatedBitmap.height
+            else mImageView.width.toFloat() / rotatedBitmap.width
+
+        val startX: Float = (mImageView.width - ivScaleX * rotatedBitmap.width) / 2
+        val startY: Float = (mImageView.height - ivScaleY * rotatedBitmap.height) / 2
+
+        return processImage(rotatedBitmap, ivScaleX, ivScaleY, startX, startY)
+    }
+
+    fun processImage(rotatedBitmap:Bitmap, ivScaleX: Float, ivScaleY: Float, startX : Float, startY : Float) : ArrayList<Result>{
+        val imgScaleX: Float = rotatedBitmap.width.toFloat() / PrePostProcessor.mInputWidth
+        val imgScaleY: Float = rotatedBitmap.height.toFloat() / PrePostProcessor.mInputHeight
         val resizedBitmap = Bitmap.createScaledBitmap(
             rotatedBitmap,
             PrePostProcessor.mInputWidth,
@@ -64,11 +105,6 @@ class MyAnalyser(val mModule: Module, val mResultView: ResultView, private val l
         val outputTensor = outputTuple[0].toTensor()
         val outputs = outputTensor.dataAsFloatArray
 
-        val imgScaleX: Float = bitmap.getWidth().toFloat() / PrePostProcessor.mInputWidth
-        val imgScaleY: Float = bitmap.getHeight().toFloat() / PrePostProcessor.mInputHeight
-        val ivScaleX: Float = mResultView.getWidth().toFloat() / bitmap.getWidth()
-        val ivScaleY: Float = mResultView.getHeight().toFloat() / bitmap.getHeight()
-
-        return PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, 0f, 0f)
+        return PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, startX, startY)
     }
 }
