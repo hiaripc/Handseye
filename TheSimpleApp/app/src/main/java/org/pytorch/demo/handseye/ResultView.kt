@@ -24,6 +24,8 @@ class ResultView//constructor(context: Context?) : super(context) {}
         mPaintText = Paint()
     }
 
+    //TODO quando ci sono due frame, in uno dei due non scrive la prediction...
+    //poco male, ma se si ha voglia di debuggare, prego:
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (mResults == null) return
