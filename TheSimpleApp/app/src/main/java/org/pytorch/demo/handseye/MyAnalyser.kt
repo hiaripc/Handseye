@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream
 
 typealias ObjectListener = (results: ArrayList<Result>) -> Unit
 
-class MyAnalyser(val mModule: Module, val mResultView: ResultView, val mImageView: ImageView, private val listener: ObjectListener?) : ImageAnalysis.Analyzer {
+class MyAnalyser(private val mModule: Module, private val mResultView: ResultView, private val mImageView: ImageView, private val listener: ObjectListener?) : ImageAnalysis.Analyzer {
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
@@ -23,7 +23,7 @@ class MyAnalyser(val mModule: Module, val mResultView: ResultView, val mImageVie
         image.close()
     }
 
-    fun Image.imgToBitmap(): Bitmap {
+    private fun Image.imgToBitmap(): Bitmap {
         val yBuffer = planes[0].buffer
         val uBuffer = planes[1].buffer
         val vBuffer = planes[2].buffer
@@ -86,7 +86,7 @@ class MyAnalyser(val mModule: Module, val mResultView: ResultView, val mImageVie
         return processImage(rotatedBitmap, ivScaleX, ivScaleY, startX, startY)
     }
 
-    fun processImage(rotatedBitmap:Bitmap, ivScaleX: Float, ivScaleY: Float, startX : Float, startY : Float) : ArrayList<Result>{
+    private fun processImage(rotatedBitmap:Bitmap, ivScaleX: Float, ivScaleY: Float, startX : Float, startY : Float) : ArrayList<Result>{
         val imgScaleX: Float = rotatedBitmap.width.toFloat() / PrePostProcessor.mInputWidth
         val imgScaleY: Float = rotatedBitmap.height.toFloat() / PrePostProcessor.mInputHeight
         val resizedBitmap = Bitmap.createScaledBitmap(

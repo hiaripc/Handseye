@@ -63,6 +63,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private var cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
     private var mModule: Module? = null
+    private var lastPrediction : Int = -1
+    private var countPrediction : Int = 0
+
+    //Number of frame to consider a prediction valid to be printed in textView
+    private val countPredictionThresh = 2
+
     private val takePictureLauncher  = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         onTakePictureResult(
             result
@@ -79,8 +85,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rotateClose  : Animation
     private lateinit var fromBottom : Animation
     private lateinit var toBottom : Animation
-    private lateinit var btnPickphoto : FloatingActionButton
-    private lateinit var btnTakephoto : FloatingActionButton
+    private lateinit var btnPickPicture : FloatingActionButton
+    private lateinit var btnTakePicture : FloatingActionButton
     private lateinit var btnBook : FloatingActionButton
     private lateinit var btnAdd : FloatingActionButton
     private lateinit var btnLive : FloatingActionButton
@@ -139,8 +145,8 @@ class MainActivity : AppCompatActivity() {
         mAccuracyBar = viewBinding.accuracyBar
         mAccuracyLayout = viewBinding.accuracyLayout
         mAccuracyTextView = viewBinding.accuracyText
-        btnPickphoto = viewBinding.pickphotoBtn
-        btnTakephoto = viewBinding.takephotoBtn
+        btnPickPicture = viewBinding.pickphotoBtn
+        btnTakePicture = viewBinding.takephotoBtn
         btnBook = viewBinding.bookBtn
         btnAdd = viewBinding.addBtn
         btnLive = viewBinding.liveButton
@@ -173,14 +179,14 @@ class MainActivity : AppCompatActivity() {
 
 
         btnAdd.setOnClickListener { manageFloatingButtons() }
-        btnTakephoto.setOnClickListener {
+        btnTakePicture.setOnClickListener {
             manageFloatingButtons()
             manageViewPhoto(0)
             cameraProviderFuture.get().unbindAll()
             val takePicture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             takePictureLauncher.launch(takePicture)
         }
-        btnPickphoto.setOnClickListener {
+        btnPickPicture.setOnClickListener {
             manageFloatingButtons()
             manageViewPhoto(0)
             cameraProviderFuture.get().unbindAll()
@@ -243,6 +249,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun manageViewPhoto(case: Int){
         mResultView.visibility = View.INVISIBLE
+
         if(clickedBook) {
             mAccuracyLayout.visibility = View.INVISIBLE
             mTextView.visibility = View.VISIBLE
@@ -266,19 +273,19 @@ class MainActivity : AppCompatActivity() {
     private fun manageFloatingButtons() {
         clickedAdd = !clickedAdd
         val visib: Int = if (clickedAdd) View.VISIBLE else View.INVISIBLE
-        btnTakephoto.visibility = visib
-        btnPickphoto.visibility = visib
+        btnTakePicture.visibility = visib
+        btnPickPicture.visibility = visib
         btnBook.visibility = visib
         if (clickedAdd) {
             btnAdd.startAnimation(rotateOpen)
-            btnPickphoto.startAnimation(fromBottom)
+            btnPickPicture.startAnimation(fromBottom)
             btnBook.startAnimation(fromBottom)
-            btnTakephoto.startAnimation(fromBottom)
+            btnTakePicture.startAnimation(fromBottom)
         } else {
             btnAdd.startAnimation(rotateClose)
-            btnTakephoto.startAnimation(toBottom)
-            btnTakephoto.startAnimation(toBottom)
-            btnTakephoto.startAnimation(toBottom)
+            btnTakePicture.startAnimation(toBottom)
+            btnTakePicture.startAnimation(toBottom)
+            btnTakePicture.startAnimation(toBottom)
         }
     }
 
@@ -305,8 +312,14 @@ class MainActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView, mImageView) { results ->
-                        if (results.size > 0) Log.d("Result:", results[0].classIndex.toString() + " " + results[0].score)
-                        runOnUiThread { applyToUiAnalyzeImage(results) }
+                        if (results.size > 0) {
+                            Log.d(
+                                "Result:",
+                                results[0].classIndex.toString() + " " + results[0].score
+                            )
+                            val textResult = getTextResults(results, false)
+                            runOnUiThread { applyToUiAnalyzeImage(results,textResult) }
+                        }
                     })
                 }
 
@@ -335,10 +348,51 @@ class MainActivity : AppCompatActivity() {
         mImageView.setImageBitmap(rotatedBitmap)
 
         val results = objectAnalyser?.analyzeImage(bitmap!!)
-        if (results != null) runOnUiThread { applyToUiAnalyzeImage(results) }
+        if (results != null) {
+            val textResult = getTextResults(results,true)
+            runOnUiThread { applyToUiAnalyzeImage(results, textResult)}
+        }
     }
 
-    private fun applyToUiAnalyzeImage(results: ArrayList<Result>) {
+    private fun getTextResults(results: ArrayList<Result>, isPicture : Boolean) : String {
+        //For our use case, we should consider only one prediction in the image.
+        //ATM, considering the best among results.
+        //Only if the same prediction persist for at least 2 frames, we are actually writing it
+
+        var maxAcc = 0f
+        var predictionIdx = -1
+        var predictionText = ""
+        var textResult = ""
+        for (i in results.indices){
+            val prediction = PrePostProcessor.mClasses[results[i].classIndex].toString()
+            Log.d("DETECT ", prediction)
+            if (results[i].score > maxAcc) {
+                maxAcc = results[i].score
+                predictionIdx = results[i].classIndex
+                predictionText = prediction
+            }
+        }
+
+        //If is a photo, just return the best value.
+        if (isPicture) return predictionText
+
+        //Check if the prediction is not sporadic
+        if (predictionIdx != -1) {
+            if (lastPrediction == predictionIdx) {
+                countPrediction++
+                if (countPrediction == countPredictionThresh) {
+                    textResult = predictionText
+                    countPrediction = 0
+                }
+            } else {
+                lastPrediction = predictionIdx
+                countPrediction = 0
+            }
+        }
+
+        return textResult
+    }
+    private fun applyToUiAnalyzeImage(results: ArrayList<Result>, textResult: String) {
         Log.d("DETECT ", "applying")
 
         if (results.isEmpty()) Log.e("DETECT ", "No results.")
@@ -348,11 +402,8 @@ class MainActivity : AppCompatActivity() {
         mResultView.invalidate()
         mResultView.visibility = View.VISIBLE
 
-        for (result: Result in results){
-            val prediction = PrePostProcessor.mClasses[result.classIndex].toString()
-            Log.d("DETECT ", prediction)
-            mTextView.text = String.format("%s %s", mTextView.text, prediction)
-        }
+        if (textResult.isNotBlank()) mTextView.text = String.format("%s %s", mTextView.text, textResult)
+
     }
 
     private fun onPickPictureResult(result: ActivityResult) {
