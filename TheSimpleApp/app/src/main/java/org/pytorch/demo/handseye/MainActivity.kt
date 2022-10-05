@@ -21,13 +21,13 @@ import android.util.Size
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.widget.AbsSeekBar
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
@@ -63,6 +63,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private var cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
     private var mModule: Module? = null
+    private val takePictureLauncher  = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        onTakePictureResult(
+            result
+        )
+    }
+    private val pickPictureLauncher  = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        onPickPictureResult(
+            result
+        )
+    }
 
     //Floating buttons
     private lateinit var rotateOpen : Animation
@@ -141,6 +151,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -159,20 +170,22 @@ class MainActivity : AppCompatActivity() {
 
         setupModernCamera()
 
+
+
         btnAdd.setOnClickListener { manageFloatingButtons() }
         btnTakephoto.setOnClickListener {
             manageFloatingButtons()
             manageViewPhoto(0)
             cameraProviderFuture.get().unbindAll()
             val takePicture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            startActivityForResult(takePicture, 0)
+            takePictureLauncher.launch(takePicture)
         }
         btnPickphoto.setOnClickListener {
             manageFloatingButtons()
             manageViewPhoto(0)
             cameraProviderFuture.get().unbindAll()
-            val pickPhoto = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
-            startActivityForResult(pickPhoto, 1)
+            val pickPicture = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+            pickPictureLauncher.launch(pickPicture)
         }
         btnBook.setOnClickListener {
             manageFloatingButtons()
@@ -316,6 +329,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun detect(bitmap: Bitmap?, rotationDegrees: Int) {
         mProgressBar.visibility = ProgressBar.VISIBLE
+        mTextView.text = ""
 
         val rotatedBitmap = objectAnalyser?.rotateBitmap(bitmap!!, rotationDegrees)
         mImageView.setImageBitmap(rotatedBitmap)
@@ -341,42 +355,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // TODO when all the important features are finished, this could be updated in a non-deprecated way
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode != Activity.RESULT_CANCELED) {
-            var rotationDegrees = 0
-            var mBitmap : Bitmap? = null
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                when (requestCode) {
-                    0 -> {
-                        mBitmap = data.extras?.get("data") as Bitmap
-                        rotationDegrees = 0
-                    }
-                    1 -> {
-                        val selectedImage: Uri? = data.data
-                        val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
-                        if (selectedImage != null) {
-                            val cursor: Cursor? = contentResolver.query(
-                                selectedImage,
-                                filePathColumn, null, null, null
-                            )
-                            if (cursor != null) {
-                                cursor.moveToFirst()
-                                val columnIndex = cursor.getColumnIndex(filePathColumn[0])
-                                val picturePath = cursor.getString(columnIndex)
-                                mBitmap = BitmapFactory.decodeFile(picturePath)
-                                rotationDegrees = 0
-                                cursor.close()
-                            }
-                        }
-                    }
+    private fun onPickPictureResult(result: ActivityResult) {
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val selectedImage: Uri? = result.data!!.data
+            val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
+            if (selectedImage != null) {
+                val cursor: Cursor? = contentResolver.query(
+                    selectedImage,
+                    filePathColumn, null, null, null
+                )
+                if (cursor != null) {
+                    cursor.moveToFirst()
+                    val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+                    val picturePath = cursor.getString(columnIndex)
+                    val mBitmap = BitmapFactory.decodeFile(picturePath)
+                    val rotationDegrees = 0
+                    cursor.close()
+                    detect(mBitmap, rotationDegrees)
                 }
-                //mImageView!!.setImageBitmap(mBitmap)
-                detect(mBitmap, rotationDegrees)
+                else Log.e("Pick photo", "There is some problem with")
             }
         }
+    }
+
+    private fun onTakePictureResult(result : ActivityResult) {
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val mBitmap = result.data!!.extras?.get("data") as Bitmap
+            val rotationDegrees = 0
+            detect(mBitmap, rotationDegrees)
+        }
+        else Log.e("Pick photo", "There is some problem with")
+
     }
 
     companion object {
