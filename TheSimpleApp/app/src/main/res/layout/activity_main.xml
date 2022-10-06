@@ -76,7 +76,8 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_marginBottom="56dp"
-        android:backgroundTint="@android:color/white"
+        app:backgroundTint="@color/colorNotLive"
+        app:borderWidth="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.501"
@@ -184,6 +185,7 @@
         app:layout_constraintBottom_toTopOf="@+id/pickphoto_btn"
         app:layout_constraintEnd_toEndOf="@+id/pickphoto_btn"
         app:srcCompat="@drawable/ic_takephoto" />
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

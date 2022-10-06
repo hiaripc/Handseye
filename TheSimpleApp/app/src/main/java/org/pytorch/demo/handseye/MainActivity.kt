@@ -10,9 +10,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -220,13 +222,16 @@ class MainActivity : AppCompatActivity() {
             manageViewPhoto(1)
             cameraProviderFuture.get().unbindAll()
             if (clickedLive) {
+                btnLive.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#9D0006"))
                 cameraProviderFuture.get()
                     .bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
                 mTextView.text = ""
-            } else cameraProviderFuture.get()
-                .bindToLifecycle(this, cameraSelector, preview)
+            } else {
+                cameraProviderFuture.get()
+                    .bindToLifecycle(this, cameraSelector, preview)
+                btnLive.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#F9F5D7"))
+            }
         }
-
         mTextView.setOnClickListener {
             mTextView.text = ""
         }
@@ -257,7 +262,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         when(case){
-            //Photo
+            //Picture
             0 -> {
                 mImageView.visibility = View.VISIBLE
                 mPreviewView.visibility = View.INVISIBLE
