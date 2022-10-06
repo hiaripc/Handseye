@@ -3,6 +3,7 @@ package org.pytorch.demo.handseye
 import android.annotation.SuppressLint
 import android.graphics.*
 import android.media.Image
+import android.util.Log
 import android.widget.ImageView
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -12,7 +13,7 @@ import org.pytorch.torchvision.TensorImageUtils
 import java.io.ByteArrayOutputStream
 
 
-typealias ObjectListener = (results: ArrayList<Result>) -> Unit
+typealias ObjectListener = (results: Result?) -> Unit
 
 class MyAnalyser(private val mModule: Module, private val mResultView: ResultView, private val mImageView: ImageView, private val listener: ObjectListener?) : ImageAnalysis.Analyzer {
 
@@ -59,7 +60,7 @@ class MyAnalyser(private val mModule: Module, private val mResultView: ResultVie
     //Overloaded for picture taken/picked, need to calculated StartX/Y and different ivScale
 
     @SuppressLint("UnsafeOptInUsageError")
-    fun analyzeImage(image: ImageProxy, rotationDegrees: Int): ArrayList<Result> {
+    fun analyzeImage(image: ImageProxy, rotationDegrees: Int): Result? {
         val bitmap = image.image!!.imgToBitmap()
         val rotatedBitmap = rotateBitmap(bitmap, rotationDegrees)
 
@@ -70,7 +71,7 @@ class MyAnalyser(private val mModule: Module, private val mResultView: ResultVie
     }
 
     //Picked/taken photo
-    fun analyzeImage(rotatedBitmap: Bitmap): ArrayList<Result> {
+    fun analyzeImage(rotatedBitmap: Bitmap): Result? {
         val ivScaleX =
             if (rotatedBitmap.width > rotatedBitmap.height)
                 mImageView.width.toFloat() / rotatedBitmap.width
@@ -86,7 +87,7 @@ class MyAnalyser(private val mModule: Module, private val mResultView: ResultVie
         return processImage(rotatedBitmap, ivScaleX, ivScaleY, startX, startY)
     }
 
-    private fun processImage(rotatedBitmap:Bitmap, ivScaleX: Float, ivScaleY: Float, startX : Float, startY : Float) : ArrayList<Result>{
+    private fun processImage(rotatedBitmap:Bitmap, ivScaleX: Float, ivScaleY: Float, startX : Float, startY : Float) : Result? {
         val imgScaleX: Float = rotatedBitmap.width.toFloat() / PrePostProcessor.mInputWidth
         val imgScaleY: Float = rotatedBitmap.height.toFloat() / PrePostProcessor.mInputHeight
         val resizedBitmap = Bitmap.createScaledBitmap(
@@ -105,6 +106,9 @@ class MyAnalyser(private val mModule: Module, private val mResultView: ResultVie
         val outputTensor = outputTuple[0].toTensor()
         val outputs = outputTensor.dataAsFloatArray
 
-        return PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, startX, startY)
+        val results = PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, startX, startY)
+
+        //Return null if empty, otherwise return the best
+        return results.maxByOrNull { it.score }
     }
 }

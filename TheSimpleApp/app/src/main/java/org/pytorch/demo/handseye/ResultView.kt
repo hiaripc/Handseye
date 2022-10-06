@@ -14,7 +14,7 @@ class ResultView//constructor(context: Context?) : super(context) {}
     (context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     private var mPaintRectangle: Paint? = null
     private var mPaintText: Paint? = null
-    private var mResults: ArrayList<Result>? = null
+    private var mResult: Result? = null
     private var mPath = Path()
     private var mRectF = RectF()
 
@@ -29,48 +29,50 @@ class ResultView//constructor(context: Context?) : super(context) {}
     //una soluzione comoda potrebbe essere passare direttamente solo il migliore risultato.
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (mResults == null) return
+        if (mResult == null) return
         mPath.reset()
-        for (result in mResults!!) {
+        //for (mResult in mResults!!) {
             //Log.d("onDraw: ", result.classIndex.toString() + " " +result.rect.toString())
-            mPaintRectangle!!.strokeWidth = 5f
-            mPaintRectangle!!.style = Paint.Style.STROKE
-            canvas.drawRect(result.rect, mPaintRectangle!!)
-            mRectF.set(
-                result.rect.left.toFloat(),
-                result.rect.top.toFloat(),
-                (result.rect.left + TEXT_WIDTH).toFloat(), (result.rect.top + TEXT_HEIGHT).toFloat()
-            )
-            /* old code
-            val mPath = Path()
+        mPaintRectangle!!.strokeWidth = 5f
+        mPaintRectangle!!.style = Paint.Style.STROKE
+        canvas.drawRect(mResult!!.rect, mPaintRectangle!!)
+        mRectF.set(
+            mResult!!.rect.left.toFloat(),
+            mResult!!.rect.top.toFloat(),
+            (mResult!!.rect.left + TEXT_WIDTH).toFloat(), (mResult!!.rect.top + TEXT_HEIGHT).toFloat()
+        )
+        /* old code
+        val mPath = Path()
 
-            val mRectF = RectF(
-                result.rect.left.toFloat(),
-                result.rect.top.toFloat(),
-                (result.rect.left + TEXT_WIDTH).toFloat(), (result.rect.top + TEXT_HEIGHT).toFloat()
-            )*/
+        val mRectF = RectF(
+            result.rect.left.toFloat(),
+            result.rect.top.toFloat(),
+            (result.rect.left + TEXT_WIDTH).toFloat(), (result.rect.top + TEXT_HEIGHT).toFloat()
+        )*/
 
-            mPath.addRect(mRectF, Path.Direction.CW)
-            mPaintText!!.color = Color.MAGENTA
-            canvas.drawPath(mPath, mPaintText!!)
-            mPaintText!!.color = Color.WHITE
-            mPaintText!!.strokeWidth = 0f
-            mPaintText!!.style = Paint.Style.FILL
-            mPaintText!!.textSize = 32f
-            canvas.drawText(
-                String.format(
-                    "%s %.2f",
-                    PrePostProcessor.mClasses[result.classIndex], result.score
-                ),
-                (result.rect.left + TEXT_X).toFloat(),
-                (result.rect.top + TEXT_Y).toFloat(), mPaintText!!
-            )
-        }
+        mPath.addRect(mRectF, Path.Direction.CW)
+        mPaintText!!.color = Color.MAGENTA
+        canvas.drawPath(mPath, mPaintText!!)
+        mPaintText!!.color = Color.WHITE
+        mPaintText!!.strokeWidth = 0f
+        mPaintText!!.style = Paint.Style.FILL
+        mPaintText!!.textSize = 32f
+        canvas.drawText(
+            String.format(
+                "%s %.2f",
+                PrePostProcessor.mClasses[mResult!!.classIndex], mResult!!.score
+            ),
+            (mResult!!.rect.left + TEXT_X).toFloat(),
+            (mResult!!.rect.top + TEXT_Y).toFloat(), mPaintText!!
+        )
+
     }
 
-    fun setResults(results: ArrayList<Result>?) {
-        mResults = results
+
+    fun setResult(result: Result?) {
+        mResult = result
     }
+
 
     companion object {
         private const val TEXT_X = 40

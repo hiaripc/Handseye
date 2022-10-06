@@ -311,14 +311,10 @@ class MainActivity : AppCompatActivity() {
                 .setTargetResolution(Size(480,640))
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView, mImageView) { results ->
-                        if (results.size > 0) {
-                            Log.d(
-                                "Result:",
-                                results[0].classIndex.toString() + " " + results[0].score
-                            )
-                            val textResult = getTextResults(results, false)
-                            runOnUiThread { applyToUiAnalyzeImage(results,textResult) }
+                    it.setAnalyzer(cameraExecutor, MyAnalyser(mModule!!, mResultView, mImageView) { result ->
+                        if (result != null) {
+                            val textResult = getTextResults(result, false)
+                            runOnUiThread { applyToUiAnalyzeImage(result,textResult) }
                         }
                     })
                 }
@@ -354,51 +350,43 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getTextResults(results: ArrayList<Result>, isPicture : Boolean) : String {
+    private fun getTextResults(result: Result?, isPicture : Boolean) : String {
         //For our use case, we should consider only one prediction in the image.
         //ATM, considering the best among results.
         //Only if the same prediction persist for at least 2 frames, we are actually writing it
-
-        var maxAcc = 0f
-        var predictionIdx = -1
-        var predictionText = ""
         var textResult = ""
-        for (i in results.indices){
-            val prediction = PrePostProcessor.mClasses[results[i].classIndex].toString()
-            Log.d("DETECT ", prediction)
-            if (results[i].score > maxAcc) {
-                maxAcc = results[i].score
-                predictionIdx = results[i].classIndex
-                predictionText = prediction
-            }
-        }
+        if (result == null) return textResult
+
+        val predictionText = PrePostProcessor.mClasses[result.classIndex].toString()
 
         //If is a photo, just return the best value.
         if (isPicture) return predictionText
 
         //Check if the prediction is not sporadic
-        if (predictionIdx != -1) {
-            if (lastPrediction == predictionIdx) {
-                countPrediction++
-                if (countPrediction == countPredictionThresh) {
-                    textResult = predictionText
-                    countPrediction = 0
-                }
-            } else {
-                lastPrediction = predictionIdx
+        val predictionIdx = result.classIndex
+        if (lastPrediction == predictionIdx) {
+            countPrediction++
+            if (countPrediction == countPredictionThresh) {
+                textResult = predictionText
                 countPrediction = 0
             }
+        } else {
+            lastPrediction = predictionIdx
+            countPrediction = 0
         }
 
         return textResult
     }
-    private fun applyToUiAnalyzeImage(results: ArrayList<Result>, textResult: String) {
+    private fun applyToUiAnalyzeImage(result: Result?, textResult: String) {
         Log.d("DETECT ", "applying")
 
-        if (results.isEmpty()) Log.e("DETECT ", "No results.")
-
+        if (result == null) Log.e("DETECT ", "No results.")
+        Log.d(
+            "Result:",
+            result!!.classIndex.toString() + " " + result.score
+        )
         mProgressBar.visibility = ProgressBar.INVISIBLE
-        mResultView.setResults(results)
+        mResultView.setResult(result)
         mResultView.invalidate()
         mResultView.visibility = View.VISIBLE
 
