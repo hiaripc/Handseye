@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="colorPrimary">#282828</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#FF6D00</color>
-    <color name="colorLive">#9D0006</color>
-    <color name="colorNotLive" id="colorNotLive">#F9F5D7</color>
-</resources>
