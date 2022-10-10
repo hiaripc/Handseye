@@ -118,3 +118,13 @@ Quindi il problema sta nel porting o nell'hardware limitato del telefono, non ne
 La rete per essere utilizzata su mobile viene prima esportata in torchscript e convertita per il lite interpreter. Nel file export.py, il metodo export_torchscript viene chiamato se durante l'export si usa l'opzione --include torchscript. Un test è stato eseguito per comprendere la differenza in precisione e prestazione del modello con e senza utilizzo a monte del metodo 'optimize_for_mobile'. Il risultato è: senza ottimizzazione per mobile, il modello ha la stessa dimensione su disco e la stessa precisione, ma le prestazioni diminuiscono notevolmente rendendo l'app inutilizzabile. 'optimize_for_mobile' è necessario, [qui](https://pytorch.org/tutorials/recipes/mobile_perf.html) due righe in cui se ne parla.
 ### save_for_lite_interpreter
 Non si trovano molte informazioni riguardo questa funzione, *sembra* sia solo una funzione che compatti il modello (Scriptmodule Torchscript) e lo renda leggibile all'interprete lite, senza modificarlo in alcun modo.
+
+
+
+##Bibliography
+
+https://arxiv.org/abs/1506.02640
+https://github.com/ultralytics/yolov5
+https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Redmon_You_Only_Look_CVPR_2016_paper.pdf
+https://ieeexplore.ieee.org/document/9491672
+https://www.researchgate.net/publication/359345812_Gesture_recognition_based_on_modified_Yolov5s

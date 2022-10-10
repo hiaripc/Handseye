@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mAccuracyBar: SeekBar
     private lateinit var mAccuracyLayout: LinearLayout
     private lateinit var mAccuracyTextView: TextView
+    private val  MySpellCheker : MySpellChecker = MySpellChecker()
 
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
