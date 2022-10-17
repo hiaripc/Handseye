@@ -18,11 +18,14 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.service.textservice.SpellCheckerService
 import android.util.Log
 import android.util.Size
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.textservice.*
+import android.view.textservice.SpellCheckerSession.SpellCheckerSessionListener
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -46,7 +49,7 @@ import java.io.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SpellCheckerSessionListener{
     private lateinit var viewBinding : ActivityMainBinding
     private lateinit var mTextView : TextView
     private lateinit var mImageView : ImageView
@@ -56,7 +59,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mAccuracyBar: SeekBar
     private lateinit var mAccuracyLayout: LinearLayout
     private lateinit var mAccuracyTextView: TextView
-    private val  MySpellCheker : MySpellChecker = MySpellChecker()
+    private val  mySpellChecker : SpellCheckerService.Session = MySpellCheckerService().createSession()
 
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
@@ -164,6 +167,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        //Usage: (text, max_suggestion_number)
+        Log.e("SPELL", "starting")
+        //mySpellChecker.onGetSuggestions(TextInfo("Hel"), 2)
+        val tsm = getSystemService(Context.TEXT_SERVICES_MANAGER_SERVICE) as TextServicesManager
+        val spellCheckSession = tsm.newSpellCheckerSession(null,null,this,true)
+
+        spellCheckSession!!.getSuggestions(TextInfo("aiot"), 5)
+
         //TODO: to not crash on first start, something like that is needed
         //if(!checkPermissions()) checkPermissions
         checkPermissions()
@@ -183,27 +194,27 @@ class MainActivity : AppCompatActivity() {
 
         btnAdd.setOnClickListener { manageFloatingButtons() }
         btnTakePicture.setOnClickListener {
+            cameraProviderFuture.get().unbindAll()
             manageFloatingButtons()
             manageViewPhoto(0)
-            cameraProviderFuture.get().unbindAll()
             val takePicture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             takePictureLauncher.launch(takePicture)
         }
         btnPickPicture.setOnClickListener {
+            cameraProviderFuture.get().unbindAll()
             manageFloatingButtons()
             manageViewPhoto(0)
-            cameraProviderFuture.get().unbindAll()
             val pickPicture = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
             pickPictureLauncher.launch(pickPicture)
         }
         btnBook.setOnClickListener {
+            cameraProviderFuture.get().unbindAll()
             manageFloatingButtons()
             manageViewPhoto(0)
             clickedBook = true
             mAccuracyLayout.visibility = View.VISIBLE
             mTextView.visibility = View.INVISIBLE
 
-            cameraProviderFuture.get().unbindAll()
             try {
                 mImageView.setImageBitmap(
                     BitmapFactory.decodeFile(
@@ -219,9 +230,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnLive.setOnClickListener {
+            cameraProviderFuture.get().unbindAll()
             clickedLive = !clickedLive
             manageViewPhoto(1)
-            cameraProviderFuture.get().unbindAll()
             if (clickedLive) {
                 btnLive.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#9D0006"))
                 cameraProviderFuture.get()
@@ -459,5 +470,34 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+    }
+
+    override fun onGetSuggestions(suggestions: Array<out SuggestionsInfo>?) {
+        var s = ""
+        if (suggestions == null || suggestions.isEmpty()) {
+            Log.e("SPELLGET", "No suggestions")
+            return
+        }
+        for (suggestion in suggestions){
+            Log.e("SPELLGET","New suggestion")
+            val count = suggestion.suggestionsCount
+            Log.e("SPELLGET", "$count suggestions")
+            if (count > 0) {
+                for (i in 0..count) {
+                    s = "$s, ${suggestion.getSuggestionAt(i)}"
+                }
+                Log.e("SPELLGET",s)
+            }
+        }
+
+    }
+
+    override fun onGetSentenceSuggestions(p0: Array<out SentenceSuggestionsInfo>?) {
+        var s = ""
+        for (suggestion in p0!!){
+            s = "$s,"
+
+        }
+        Log.e("SPELLGET","")
     }
 }

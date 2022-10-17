@@ -7,4 +7,6 @@
     <string name="select">Select</string>
     <string name="live">LIVE</string>
     <string name="texture_view">Texture View</string>
+    <string name="spellchecker_name">MySpellChecker</string>
+    <string name="subtype_generic">language</string>
 </resources>

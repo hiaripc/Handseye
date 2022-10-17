@@ -120,6 +120,17 @@ La rete per essere utilizzata su mobile viene prima esportata in torchscript e c
 Non si trovano molte informazioni riguardo questa funzione, *sembra* sia solo una funzione che compatti il modello (Scriptmodule Torchscript) e lo renda leggibile all'interprete lite, senza modificarlo in alcun modo.
 
 
+## 17OTT22 - Spell Checker
+### Ricapitolando:
+* i motivi della perdita di accuracy nella versione lite non ci devono preoccupare, magari li guarderemo in fase di relazione
+* l'app è funzionante in tutte le funzionalità inizialmente pensate
+* per l'estensione si pensava di implementare uno Spell Checker utilizzando la matrice di confusione per controllare anche le lettere più confuse per migliorarne la precisione.
+
+[Documentazione](https://developer.android.com/develop/ui/views/touch-and-input/spell-checker-framework) di android studio del framework e riguardo la sua [session](https://developer.android.com/reference/android/service/textservice/SpellCheckerService.Session).
+
+Non che si capisca un granchè, guardando questi [samples](https://github.com/aosp-mirror/platform_development/tree/master/samples/SpellChecker) meglio.
+
+Altra [documentazione](https://code.tutsplus.com/tutorials/an-introduction-to-androids-spelling-checker-framework--cms-23754).
 
 ##Bibliography
 
