@@ -209,7 +209,7 @@ Button, in ordine:
 Il risultato dell'analisi appare sotto l'immagine in un'apposita Text
 Box.
 
-![Interfaccia dell'applicazione](relationMaterial/DetectYolo/result/app_interface.jpg)
+![Interfaccia dell'applicazione](relationMaterial/app_interface.jpg)
 
 In Figura [6](#fig:app_interface){reference-type="ref"
 reference="fig:app_interface"} l'interfaccia di Handseye. Appena aperta
@@ -229,7 +229,7 @@ Cliccando l'icona del libro apparirà l'interfaccia in Figura
 barra sottostante l'immagine permette la configurazione della threshold
 con cui si vuole analizzare l'input.
 
-![Indicazioni ASL e configurazione threshold](relationMaterial/DetectYolo/result)
+![Indicazioni ASL e configurazione threshold](relationMaterial/app_book.jpg)
 
 #### Commento
 
@@ -254,7 +254,7 @@ originale, il modello YOLO esportato per mobile riduce drasticamente la
 precisione, rendendo non sempre facile capire con esattezza la parola
 corretta.
 
-![Un esempio di una lettera riconosciuta](images/app/app_letter.jpg)
+![Un esempio di una lettera riconosciuta](relationMaterial/app_letter.jpg)
 
 #### Possibili sviluppi futuri
 
