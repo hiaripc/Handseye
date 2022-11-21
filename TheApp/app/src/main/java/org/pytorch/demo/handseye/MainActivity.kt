@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity(), SpellCheckerSessionListener{
     private lateinit var mAccuracyBar: SeekBar
     private lateinit var mAccuracyLayout: LinearLayout
     private lateinit var mAccuracyTextView: TextView
-    private val  mySpellChecker : SpellCheckerService.Session = MySpellCheckerService().createSession()
+    //private val  mySpellChecker : SpellCheckerService.Session = MySpellCheckerService().createSession()
 
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
@@ -166,7 +166,7 @@ class MainActivity : AppCompatActivity(), SpellCheckerSessionListener{
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        /*
         //Usage: (text, max_suggestion_number)
         Log.e("SPELL", "starting")
         //mySpellChecker.onGetSuggestions(TextInfo("Hel"), 2)
@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity(), SpellCheckerSessionListener{
         val spellCheckSession = tsm.newSpellCheckerSession(null,null,this,true)
 
         spellCheckSession!!.getSuggestions(TextInfo("aiot"), 5)
-
+        */
         //TODO: to not crash on first start, something like that is needed
         //if(!checkPermissions()) checkPermissions
         checkPermissions()
