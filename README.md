@@ -1,3 +1,10 @@
+##Autori
+- [Daniel Bernardi](https://github.com/ancaah)
+- [Hiari Pizzini Cavagna](https://github.com/hiaripc)
+
+## Abstract
+Handseye è un'applicazione Android che riconosce i gesti del linguaggio dei segni americano (ASL, American Sign Language), con la possibilità di formare parole tramite il solo input della fotocamera. I principali obiettivi didattici posti sono: l'utilizzo di tecnologie all'avanguardia e l'allenamento di una rete neurale. La ricerca di un dataset esaustivo per gli scopi prefissati è stato il primo punto preso in considerazione. In seguito, sono state vagliate varie tecnologie per la creazione di una rete neurale portabile su dispositivi mobili. La scelta è ricaduta su YOLOv5. Ulteriore cura è stata posta anche nell'utilizzo di tecnologie moderne per l'applicazione Android, sviluppata in linguaggio Kotlin.
+
 ## Introduzione
 ============
 
